@@ -19,6 +19,8 @@ import {
   Purchase
 } from '@/components/stocks'
 
+import { WeatherCard } from '@/components/weather/weather'
+
 import { z } from 'zod'
 import { EventsSkeleton } from '@/components/stocks/events-skeleton'
 import { Events } from '@/components/stocks/events'
@@ -35,6 +37,54 @@ import { saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth } from '@/auth'
+
+const LoadingComponent = () => (
+  <div className="animate-pulse p-4">getting weather...</div>
+);
+
+const getCoordinatesFromLocation = async (location: string) => {
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&APPID=${
+        process.env.OPEN_WEATHER_MAP_API_KEY
+      }`
+    );
+    const locationData = await response.json();
+    if (locationData.length === 0) {
+      throw new Error("No location by that name. Try again.");
+    }
+    const { lat, lon } = locationData[0];
+    return { lat, lon };
+  } catch (error) {
+    console.error("Error:", error);
+    return await Promise.reject(error);
+  }
+};
+
+
+const getWeather = async (lat: number, lon: number) => {
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${process.env.OPEN_WEATHER_MAP_API_KEY}`
+    );
+    const weatherData = await response.json();
+    return weatherData;
+  } catch (error) {
+    console.error("Error:", error);
+    return await Promise.reject("Unable to fetch weather data.");
+  }
+};
+
+interface WeatherProps {
+  location: string;
+  weather: string;
+}
+
+const WeatherComponent = (props: WeatherProps) => (
+  <div className="border border-neutral-200 p-4 rounded-lg max-w-fit">
+    The weather in {props.location} is {props.weather}
+  </div>
+);
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -474,9 +524,21 @@ async function submitUserMessage(content: string) {
             </BotCard>
           )
         }
-      }
-    }
-  })
+      },
+      getWeather: {
+        description: 'Get the weather for a location',
+        parameters: z.object({
+          location: z.string().describe('The location to get the weather for'),
+        }),
+        generate: async function* ({ location }) {
+          yield <LoadingComponent />;
+          const coordinates = await getCoordinatesFromLocation(location);
+          const weather = await getWeather(coordinates.lat, coordinates.lon);
+          return <WeatherCard weather={weather} />;
+        },
+      },
+    },
+  });
 
   return {
     id: nanoid(),
@@ -573,6 +635,11 @@ export const getUIStateFromAIState = (aiState: Chat) => {
                 <Purchase props={tool.result} />
               </BotCard>
             ) : tool.toolName === 'getEvents' ? (
+              <BotCard>
+                {/* @ts-expect-error */}
+                <Events props={tool.result} />
+              </BotCard>
+            ) : tool.toolName === 'getWeather' ? (
               <BotCard>
                 {/* @ts-expect-error */}
                 <Events props={tool.result} />
