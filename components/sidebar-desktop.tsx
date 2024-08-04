@@ -6,7 +6,7 @@ import { ChatHistory } from '@/components/chat-history'
 export async function SidebarDesktop() {
   const session = await auth()
 
-  if (!session.userId) {
+  if (!session) {
     return null
   }
 

@@ -365,7 +365,6 @@ Your responses should be clear, concise, and focused on task management. Always 
           
           return (
             <BotCard>
-              <p>Tasks "{titles.join(', ')}" have been added to the list successfully.</p>
               <TodoList tasks={addTaskResponse} />
             </BotCard>
           );
@@ -416,7 +415,7 @@ Your responses should be clear, concise, and focused on task management. Always 
       
           return (
             <BotCard>
-              <p>Tasks with IDs "{taskIds.join(', ')}" have been deleted from the list successfully.</p>
+              <p>Tasks</p>
             </BotCard>
           );
         },

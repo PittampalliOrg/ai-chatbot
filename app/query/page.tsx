@@ -1,12 +1,12 @@
-
 import { auth, EnrichedSession } from 'auth';
+import { Session } from 'inspector';
 
 export default async function Page() {
-  const session = (await auth()) as EnrichedSession;
+  const session = Session
  
   return (
     <div>
-      <pre>{session.userId}</pre>
+      <pre>{JSON.stringify(session, null, 2)}</pre>
     </div>
   );
 }
