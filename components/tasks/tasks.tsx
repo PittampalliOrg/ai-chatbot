@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { JSX, SVGProps } from "react";
 import { useOptimistic } from 'react';
-import { saveAction } from '../../app/actions';
+import { addTasks } from '../../app/actions';
 import { TodoTask } from '@microsoft/microsoft-graph-types';
-import { deleteAction } from "../../app/actions";
+import { deleteTasks } from "../../app/actions";
 import { OptimisticTask } from "../../types";
 
 
 export function TodoList({ tasks }: { tasks: OptimisticTask[] }) {
   async function formAction(formData: FormData) {
     addOptimisticItem(formData.get('item') as string);
-    await saveAction(formData);
+    let titles: string[] = [formData.get('item') as string];
+
+    await addTasks("AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", titles);
   };
 ;
 
@@ -50,8 +52,8 @@ export function TodoList({ tasks }: { tasks: OptimisticTask[] }) {
                 </label>
               </div>
               <Button type="submit" variant="ghost" size="icon" onClick={async () => {
-                await deleteAction("AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", 
-                  item.id as string);
+                await deleteTasks("AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", 
+                  [item.id as string]);
         }}>
                 <TrashIcon className="w-5 h-5" />
                 <span className="sr-only">Delete task</span>

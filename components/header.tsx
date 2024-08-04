@@ -17,13 +17,13 @@ import { ChatHistory } from './chat-history'
 import { Session } from '@/lib/types'
 
 async function UserOrLogin() {
-  const session = (await auth()) as Session
+  const session = (await auth()) as EnrichedSession
   return (
     <>
       {session?.user ? (
         <>
           <SidebarMobile>
-            <ChatHistory userId={session.user.id} />
+            <ChatHistory userId={session.userId} />
           </SidebarMobile>
           <SidebarToggle />
         </>

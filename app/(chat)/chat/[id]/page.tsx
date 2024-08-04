@@ -1,11 +1,10 @@
 import { type Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 
-import { auth } from '@/auth'
+import { auth, EnrichedSession } from '@/auth'
 import { getChat, getMissingKeys } from '@/app/actions'
 import { Chat } from '@/components/chat'
 import { AI } from '@/lib/chat/actions'
-import { Session } from '@/lib/types'
 
 export interface ChatPageProps {
   params: {
@@ -13,16 +12,17 @@ export interface ChatPageProps {
   }
 }
 
+
 export async function generateMetadata({
   params
 }: ChatPageProps): Promise<Metadata> {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession
 
   if (!session?.user) {
     return {}
   }
 
-  const chat = await getChat(params.id, session.user.id)
+  const chat = await getChat(params.id, session.userId)
 
   if (!chat || 'error' in chat) {
     redirect('/')
@@ -34,20 +34,21 @@ export async function generateMetadata({
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {
-  const session = (await auth()) as Session
+  const session = (await auth()) as EnrichedSession
+  
   const missingKeys = await getMissingKeys()
 
   if (!session?.user) {
     redirect(`/login?next=/chat/${params.id}`)
   }
 
-  const userId = session.user.id as string
+  const userId = session.userId as string
   const chat = await getChat(params.id, userId)
 
   if (!chat || 'error' in chat) {
     redirect('/')
   } else {
-    if (chat?.userId !== session?.user?.id) {
+    if (chat?.userId !== session.userId) {
       notFound()
     }
 

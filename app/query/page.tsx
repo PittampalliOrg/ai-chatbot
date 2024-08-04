@@ -1,12 +1,12 @@
 
-import { getTasks } from "../actions";
-import { TodoList } from "../../components/tasks/tasks"
-import { OptimisticTask } from "../../types";
+import { auth, EnrichedSession } from 'auth';
 
 export default async function Page() {
-  const items: OptimisticTask[] = await getTasks();
-
+  const session = (await auth()) as EnrichedSession;
+ 
   return (
-    <TodoList tasks={items} />
+    <div>
+      <pre>{session.userId}</pre>
+    </div>
   );
 }
