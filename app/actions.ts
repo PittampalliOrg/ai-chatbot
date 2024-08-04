@@ -6,9 +6,9 @@ import { kv } from '@vercel/kv'
 
 import { auth, EnrichedSession } from '@/auth'
 import { type Chat } from '@/lib/types'
-import { TodoTask, TodoTaskList } from '@microsoft/microsoft-graph-types'
+import { TodoTask, TodoTaskList, Message } from '@microsoft/microsoft-graph-types'
 import getGraphClient from './db'
-import { OptimisticTask } from '@/types'
+import { OptimisticTask, Mail } from '@/types'
 
 export async function getChats(userId?: string | null) {
   const session = (await auth()) as EnrichedSession;
@@ -307,7 +307,34 @@ revalidatePath('/');
 }
 
 
+export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
+  const client = await getGraphClient();
 
+  const response = await client
+    .api('/me/messages')
+    .select('id,subject,bodyPreview,receivedDateTime,isRead,from')
+    .top(100)
+    .get();
+
+  console.log(response);
+
+  let emails: Mail[] = response.value.map((message: any) => ({
+    id: message.id,
+    name: message.from.emailAddress.name,
+    email: message.from.emailAddress.address,
+    subject: message.subject,
+    text: message.bodyPreview,
+    date: message.receivedDateTime,
+    read: message.isRead,
+    labels: [], // Labels would need additional logic or a different API call to retrieve
+  }));
+
+  if (emailIds && emailIds.length > 0) {
+    emails = emails.filter(email => emailIds.includes(email.id));
+  }
+
+  return emails;
+}
 
 
 
