@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from "../../../components/ui/select"
 
+import { accounts} from "../data"
+
 interface AccountSwitcherProps {
   isCollapsed: boolean
   accounts: {
@@ -20,12 +22,14 @@ interface AccountSwitcherProps {
   }[]
 }
 
+const accountValues = accounts
+
 export function AccountSwitcher({
   isCollapsed,
   accounts,
 }: AccountSwitcherProps) {
   const [selectedAccount, setSelectedAccount] = React.useState<string>(
-    accounts[0].email
+    accountValues[0].email
   )
 
   return (

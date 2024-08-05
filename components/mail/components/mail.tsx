@@ -36,17 +36,18 @@ import { MailList } from "./mail-list"
 import { Nav } from "./nav"
 import { type Mail } from "../data"
 import { useMail } from "../use-mail"
+import { accounts } from "../data"
 
 interface MailProps {
-  accounts: {
+  accounts?: {
     label: string
     email: string
     icon: React.ReactNode
   }[]
   mails: Mail[]
-  defaultLayout: number[] | undefined
+  defaultLayout?: number[] | undefined
   defaultCollapsed?: boolean
-  navCollapsedSize: number
+  navCollapsedSize?: number
 }
 
 export function Mail({
@@ -99,7 +100,7 @@ export function Mail({
               isCollapsed ? "h-[52px]" : "px-2"
             )}
           >
-            <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+            <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts!} />
           </div>
           <Separator />
           <Nav

@@ -23,14 +23,16 @@ import {
   sleep,
   nanoid
 } from '@/lib/utils'
-import { addTasks, deleteTasks, getTasks, saveChat } from '@/app/actions'
+import { addTasks, deleteTasks, getEmails, getTasks, saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth, EnrichedSession } from '@/auth'
 import WeatherCard from '@/components/weather/weather'
 import { TodoList } from '@/components/tasks/tasks'
 import Search from '@/components/search'
-import { OptimisticTask } from '@/types'
+import { Mail as MailType, OptimisticTask } from '@/types'
+import { Mail } from '@/components/mail/components/mail'
+import { accounts } from '@/components/mail/data'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -130,6 +132,7 @@ Get Task Lists: Retrieve and display the user's task lists.
 Get Tasks: Retrieve and display tasks from a specific task list.
 Add Tasks: Add new tasks.
 Delete Tasks: Remove tasks from a specified task list.
+Show Email: Retrieve and display the user's email address.
 When interacting with users, ensure to:
 
 Confirm the action they want to perform.
@@ -420,6 +423,54 @@ Your responses should be clear, concise, and focused on task management. Always 
           );
         },
       },
+      showEmails: {
+        description: 'Display the user emails.',
+        parameters: z.object({
+          count: z.number().default(100).describe('The number of emails to display.')
+        }),
+        generate: async function* ({ count }) {
+          const toolCallId = nanoid();
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'showEmails',
+                    toolCallId,
+                    args: {},
+                  },
+                ],
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'showEmails',
+                    toolCallId,
+                    result: {},
+                  },
+                ],
+              },
+            ],
+          });
+
+          const items: MailType[] = await getEmails();
+
+          return (
+            <BotCard>
+              <Mail mails={items} accounts={accounts}/>
+            </BotCard>
+          );;
+        },
+      },
       
       // search_query: {
       //   description: 'Execute a search query on the Microsoft Graph API to find files based on user-defined criteria.',
@@ -567,6 +618,11 @@ export const getUIStateFromAIState = (aiState: Chat) => {
               <BotCard>
                 {/* @ts-expect-error */}
                 <Search props={tool.result} />
+              </BotCard>
+            ) : tool.toolName === 'showEmails' ? (
+              <BotCard>
+                {/* @ts-expect-error */}
+                <Mail props={tool.result} />
               </BotCard>
             ) : null
           })
