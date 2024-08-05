@@ -33,6 +33,7 @@ import Search from '@/components/search'
 import { Mail as MailType, OptimisticTask } from '@/types'
 import { Mail } from '@/components/mail/components/mail'
 import { accounts } from '@/components/mail/data'
+import { TaskComboboxForm } from '@/components/tasks/tasks-combobox-form'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -320,7 +321,7 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <TodoList tasks={items} />
+              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="/>
             </BotCard>
           );;
         },
@@ -368,7 +369,7 @@ Your responses should be clear, concise, and focused on task management. Always 
           
           return (
             <BotCard>
-              <TodoList tasks={addTaskResponse} />
+              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="  initialTasks={addTaskResponse} />
             </BotCard>
           );
         },
@@ -602,17 +603,17 @@ export const getUIStateFromAIState = (aiState: Chat) => {
             return tool.toolName === 'showTasks' ? (
               <BotCard>
                 {/* @ts-expect-error */}
-                <TodoList props={tool.result} />
+                <TaskComboboxForm props={tool.result} />
               </BotCard>
             ) : tool.toolName === 'addTasks' ? (
               <BotCard>
                 {/* @ts-expect-error */}
-                <TodoList props={tool.result} />
+                <TaskComboboxForm props={tool.result} />
               </BotCard>
             ) : tool.toolName === 'deleteTasks' ? (
               <BotCard>
                 {/* @ts-expect-error */}
-                <TodoList props={tool.result} />
+                <TaskComboboxForm props={tool.result} />
               </BotCard>
             ) : tool.toolName === 'search_query' ? (
               <BotCard>

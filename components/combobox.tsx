@@ -1,7 +1,7 @@
 "use client"
-
 import * as React from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,28 +18,30 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 
-export interface Item {
-    value: string;
-    label: string;
-}
+const frameworks = [
+    {
+        value: "next.js",
+        label: "Next.js",
+    },
+    {
+        value: "sveltekit",
+        label: "SvelteKit",
+    },
+    {
+        value: "nuxt.js",
+        label: "Nuxt.js",
+    },
+    {
+        value: "remix",
+        label: "Remix",
+    },
+    {
+        value: "astro",
+        label: "Astro",
+    },
+]
 
-interface ComboboxProps {
-    items: Item[];
-    placeholder: string;
-    emptyMessage: string;
-    searchPlaceholder: string;
-}
-
-import { TodoTask, TodoTaskList } from '@microsoft/microsoft-graph-types'
-import { Client } from '@microsoft/microsoft-graph-client';
-import { auth, EnrichedSession } from 'auth';
-
-export function Combobox({
-    items,
-    placeholder,
-    emptyMessage,
-    searchPlaceholder
-}: ComboboxProps) {
+export function Combobox() {
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState("")
 
@@ -53,33 +55,33 @@ export function Combobox({
                     className="w-[200px] justify-between"
                 >
                     {value
-                        ? items.find((item) => item.value === value)?.label
-                        : placeholder}
+                        ? frameworks.find((framework) => framework.value === value)?.label
+                        : "Select framework..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0">
                 <Command>
-                    <CommandInput placeholder={searchPlaceholder} />
-                    <CommandEmpty>{emptyMessage}</CommandEmpty>
+                    <CommandInput placeholder="Search framework..." />
+                    <CommandEmpty>No framework found.</CommandEmpty>
                     <CommandGroup>
-                        {items.map((item) => (
-                            <CommandList key={item.value}>
+                        {frameworks.map((framework) => (
+                            <CommandList key={framework.value}>
                                 <CommandItem
-                                    value={item.value}
+
+                                    value={framework.value}
                                     onSelect={(currentValue) => {
                                         setValue(currentValue === value ? "" : currentValue)
                                         setOpen(false);
-
                                     }}
                                 >
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            value === item.value ? "opacity-100" : "opacity-0"
+                                            value === framework.value ? "opacity-100" : "opacity-0"
                                         )}
                                     />
-                                    {item.label}
+                                    {framework.label}
                                 </CommandItem>
                             </CommandList>
                         ))}

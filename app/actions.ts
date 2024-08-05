@@ -336,7 +336,9 @@ export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
   return emails;
 }
 
-
+export async function getExcelEmbedUrl(){
+  return "https://pittampalli-my.sharepoint.com/:x:/p/vinod/EVX_ru95pHZAuRuHvf43wtYBB9NcIz0dm7yw2oVpR26OcA?e=Krk5dJ&action=embedview&wdAllowInteractivity=True&wdbipreview=True"
+}
 
   // export async function deleteAction(listId: string, taskId: string) {
   //   const client = await getGraphClient();
