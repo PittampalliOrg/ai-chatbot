@@ -38,13 +38,17 @@ import { type Mail } from "../data"
 import { useMail } from "../use-mail"
 import { accounts } from "../data"
 
+import { useState, useEffect } from 'react';
+import { fetchMessagesForFolder } from '../../../app/mail/actions';
+import { Message } from '@microsoft/microsoft-graph-types';
+
 interface MailProps {
   accounts?: {
     label: string
     email: string
     icon: React.ReactNode
   }[]
-  mails: Mail[]
+  mailFolders: { id: string; displayName: string }[]
   defaultLayout?: number[] | undefined
   defaultCollapsed?: boolean
   navCollapsedSize?: number
