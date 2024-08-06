@@ -36,9 +36,9 @@ import { MailList } from "./mail-list"
 import { Nav } from "./nav"
 import { type Mail } from "../data"
 import { useMail } from "../use-mail"
-import { fetchMessagesForFolder } from '../../../app/mail/actions'
-import { Message } from '@microsoft/microsoft-graph-types'
-
+import { accounts } from "../data"
+import { MailFolder } from "@microsoft/microsoft-graph-types"
+import { getEmailFolders } from "@/app/actions"
 
 interface MailProps {
   accounts?: {
@@ -46,35 +46,30 @@ interface MailProps {
     email: string
     icon: React.ReactNode
   }[]
-  mailFolders: { id: string; displayName: string }[]
+  mails: Mail[]
   defaultLayout?: number[] | undefined
   defaultCollapsed?: boolean
   navCollapsedSize?: number
+  mailFolders: MailFolder[]
 }
 
 export function Mail({
   accounts,
-  mailFolders,
+  mails,
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
   navCollapsedSize,
+  mailFolders,
 }: MailProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const [mail] = useMail()
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
 
-  useEffect(() => {
-    if (selectedFolderId) {
-      fetchMessagesForFolder(selectedFolderId)
-        .then(fetchedMessages => setMessages(fetchedMessages))
-        .catch(error => console.error('Error fetching messages:', error));
-    }
-  }, [selectedFolderId]);
-
-  const handleFolderSelect = (folderId: string) => {
-    setSelectedFolderId(folderId);
-  };
+  const links = mailFolders.map((folder) => ({
+    title: folder.displayName as string,
+    label: folder.unreadItemCount?.toString() || "",
+    icon: Archive,
+    variant: "ghost"
+  }));
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -121,12 +116,7 @@ export function Mail({
           <Separator />
           <Nav
             isCollapsed={isCollapsed}
-            links={mailFolders.map(folder => ({
-              title: folder.displayName,
-              icon: Inbox,
-              variant: "ghost",
-              onClick: () => handleFolderSelect(folder.id)
-            }))}
+            links={links}
           />
           <Separator />
           <Nav
@@ -195,17 +185,17 @@ export function Mail({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <MailList items={messages} />
+              <MailList items={mails} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={messages.filter((item) => !item.read)} />
+              <MailList items={mails.filter((item) => !item.read)} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
           <MailDisplay
-            mail={messages.find((item) => item.id === mail?.selected) || null}
+            mail={mails.find((item) => item.id === mail.selected) || null}
           />
         </ResizablePanel>
       </ResizablePanelGroup>
