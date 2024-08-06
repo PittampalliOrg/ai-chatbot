@@ -6,8 +6,8 @@ import { kv } from '@vercel/kv'
 
 import { auth, EnrichedSession } from '@/auth'
 import { type Chat } from '@/lib/types'
-import { TodoTask, TodoTaskList, Message } from '@microsoft/microsoft-graph-types'
-import getGraphClient from './db'
+import { TodoTask, TodoTaskList, Message, MailFolder } from '@microsoft/microsoft-graph-types'
+import  getGraphClient from '@/app/db'
 import { OptimisticTask, Mail } from '@/types'
 
 export async function getChats(userId?: string | null) {
@@ -335,6 +335,42 @@ export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
 
   return emails;
 }
+
+
+// function to get email folders
+export async function getEmailFolders(): Promise<MailFolder[]> {
+  const client = await getGraphClient();
+
+  const response = await client
+    .api('/me/mailFolders')
+    .get();
+
+  console.log(response);
+
+  return response.value;
+}
+
+export async function getMessagesForFolder(folderName: string, folderId: string): Promise<Mail[]>  {
+  const client = await getGraphClient();
+  const response = await client.api(`/me/mailFolders/${folderId}/messages`)
+    .select('subject,from,receivedDateTime,bodyPreview')
+    .top(50)
+    .get();
+  
+    let emails: Mail[] = response.value.map((message: any) => ({
+      id: message.id,
+      name: message.from.emailAddress.name,
+      email: message.from.emailAddress.address,
+      subject: message.subject,
+      text: message.bodyPreview,
+      date: message.receivedDateTime,
+      read: message.isRead,
+      labels: [], // Labels would need additional logic or a different API call to retrieve
+    }));
+  
+    return emails;
+}
+
 
 export async function getExcelEmbedUrl(){
   return "https://pittampalli-my.sharepoint.com/:x:/p/vinod/EVX_ru95pHZAuRuHvf43wtYBB9NcIz0dm7yw2oVpR26OcA?e=Krk5dJ&action=embedview&wdAllowInteractivity=True&wdbipreview=True"

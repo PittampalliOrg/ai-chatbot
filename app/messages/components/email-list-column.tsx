@@ -1,19 +1,6 @@
-import { ComponentProps } from "react"
-import { formatDistanceToNow } from "date-fns"
-
-import { cn } from "@/lib/utils"
-import { Badge } from "../../../components/ui/badge"
-import { ScrollArea } from "../../../components/ui/scroll-area"
-import { Separator } from "../../../components/ui/separator"
-import { Mail } from "../../../components/mail/data"
-import { useMail } from "../../../components/mail/use-mail"
-import { getMessagesForFolder } from "@/app/actions"
 import Link from 'next/link';
-import { formatEmailString } from "@/app/messages/db/utils";
-
-interface MailListProps {
-  items: Mail[]
-}
+import { formatEmailString, removeSpacesFromFolderName } from '@/app/messages/db/utils';
+import { getEmailsForFolder } from '@/app/messages/db/queries';
 
 export async function EmailListColumn({
   folderName,
@@ -22,13 +9,13 @@ export async function EmailListColumn({
   folderName: string;
   searchParams: { q?: string; id?: string };
 }) {
-  const emails = await getMessagesForFolder(folderName, searchParams.q || "");
+  const emails = await getEmailsForFolder(folderName, searchParams.q);
 
   function createUrl(id: string) {
-    const baseUrl = `/f/${folderName.toLowerCase()}`;
+    const baseUrl = `/f/${removeSpacesFromFolderName(folderName)}`;
     const params = new URLSearchParams(searchParams);
-    // params.set('id', id.toString());
-    return `${baseUrl}?${params.toString()}`;
+    params.set('id', id);
+    return `${baseUrl}?${params}`;
   }
 
   return (
@@ -39,21 +26,17 @@ export async function EmailListColumn({
             <li className="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex justify-between items-start rounded-lg">
               <div className="w-full truncate">
                 <h2 className="text-base font-bold">
-                  {formatEmailString({
-                    first_name: email.name,
-                    last_name: email.name,
-                    email: email.email,
-                  })}
+                  {formatEmailString(email)}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {email.subject}
                 </p>
                 <p className="text-sm truncate overflow-ellipsis">
-                  {email.text}
+                  {email.body}
                 </p>
               </div>
               <time className="text-xs text-gray-500 dark:text-gray-400 self-center flex justify-end">
-                {new Date(email.date).toLocaleDateString()}
+                {new Date(email.sent_date).toLocaleDateString()}
               </time>
             </li>
           </Link>
@@ -62,4 +45,3 @@ export async function EmailListColumn({
     </div>
   );
 }
-

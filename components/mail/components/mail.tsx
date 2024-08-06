@@ -32,7 +32,7 @@ import {
 import { TooltipProvider } from "../../../components/ui/tooltip"
 import { AccountSwitcher } from "./account-switcher"
 import { MailDisplay } from "./mail-display"
-import { MailList } from "./mail-list"
+import { EmailListColumn } from "./mail-list"
 import { Nav } from "./nav"
 import { type Mail } from "../data"
 import { useMail } from "../use-mail"
@@ -41,6 +41,8 @@ import { MailFolder } from "@microsoft/microsoft-graph-types"
 import { getEmailFolders } from "@/app/actions"
 
 interface MailProps {
+  params: { name: string; id: string };
+  searchParams: { q?: string; id?: string };
   accounts?: {
     label: string
     email: string
@@ -54,6 +56,8 @@ interface MailProps {
 }
 
 export function Mail({
+  params,
+  searchParams,
   accounts,
   mails,
   defaultLayout = [20, 32, 48],
@@ -68,7 +72,7 @@ export function Mail({
     title: folder.displayName as string,
     label: folder.unreadItemCount?.toString() || "",
     icon: Archive,
-    variant: "ghost"
+    variant: "default" as const
   }));
 
   return (
@@ -185,10 +189,13 @@ export function Mail({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <MailList items={mails} />
+              <EmailListColumn folderName={""} searchParams={{
+                q: undefined,
+                id: undefined
+              }} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={mails.filter((item) => !item.read)} />
+              <EmailListColumn folderName="" searchParams={{ q: undefined, id: undefined }} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
