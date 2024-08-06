@@ -1,5 +1,5 @@
 import 'server-only'
-import { ApiClientFactory, AnonymousAuthenticationProvider } from '@microsoft/kiota-abstractions';
+import { AnonymousAuthenticationProvider } from '@microsoft/kiota-abstractions';
 import { FetchRequestAdapter } from '@microsoft/kiota-http-fetchlibrary';
 import { GraphRequestAdapter } from '@microsoft/msgraph-sdk-core';
 import { GraphServiceClient } from '@microsoft/msgraph-sdk';
