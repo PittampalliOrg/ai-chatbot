@@ -39,27 +39,31 @@ export default function MessagesPage() {
   }, []);
 
   if (loading) {
-    return <div>Loading messages...</div>;
+    return <div aria-live="polite">Loading messages...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div aria-live="assertive">Error: {error}</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <main className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Recent Messages</h1>
-      <ul className="space-y-4">
-        {messages.map((message) => (
-          <li key={message.id} className="border p-4 rounded-lg">
-            <h2 className="font-semibold">{message.subject}</h2>
-            <p className="text-sm text-gray-600">From: {message.from?.emailAddress?.name}</p>
-            <p className="text-sm text-gray-600">
-              Received: {new Date(message.receivedDateTime || '').toLocaleString()}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </div>
+      {messages.length > 0 ? (
+        <ul className="space-y-4">
+          {messages.map((message) => (
+            <li key={message.id} className="border p-4 rounded-lg">
+              <h2 className="font-semibold">{message.subject || 'No Subject'}</h2>
+              <p className="text-sm text-gray-600">From: {message.from?.emailAddress?.name || 'Unknown Sender'}</p>
+              <p className="text-sm text-gray-600">
+                Received: {message.receivedDateTime ? new Date(message.receivedDateTime).toLocaleString() : 'Unknown Date'}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No messages found.</p>
+      )}
+    </main>
   );
 }
