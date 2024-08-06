@@ -1,16 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ApiClient } from '../../kiota/apiClient';
-import getGraphClient from '../db';
+import { ApiClient, ApiClientFactory } from '../../kiota/apiClient';
 import { Message } from '../../kiota/models';
-import { auth, EnrichedSession } from '@/auth'; // R
-
+import { auth, EnrichedSession } from '@/auth';
+import { AnonymousAuthenticationProvider } from '@microsoft/kiota-abstractions';
 
 export default function MessagesPage() {
-
-  const session = (await auth()) as EnrichedSession;
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +14,9 @@ export default function MessagesPage() {
   useEffect(() => {
     async function fetchMessages() {
       try {
-
-        const apiClient = ApiClientFactory.create(graphClient);
+        const session = await auth() as EnrichedSession;
+        const authProvider = new AnonymousAuthenticationProvider(session.accessToken);
+        const apiClient = ApiClientFactory.create(authProvider);
 
         const response = await apiClient.me.messages.get({
           queryParameters: {
