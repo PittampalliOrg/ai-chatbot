@@ -1,23 +1,65 @@
 import 'server-only'
-import { Client } from '@microsoft/microsoft-graph-client';
-import { auth, EnrichedSession } from '../auth'; // Replace './auth' with the correct path to the file containing the EnrichedSession type
+import { AnonymousAuthenticationProvider } from '@microsoft/kiota-abstractions';
+import { FetchRequestAdapter } from '@microsoft/kiota-http-fetchlibrary';
+import { GraphServiceClient } from '@microsoft/msgraph-sdk-core';
+import { auth, EnrichedSession } from '../auth';
+import { Message } from '@microsoft/microsoft-graph-types';
+import { Mail } from '../types';
 
-
-export default async function getGraphClient() {
-
+export async function getGraphClient() {
     const session = (await auth()) as EnrichedSession;
-    // console.log('Session inside the route ', session);
-
     const accessToken = session?.accessToken;
-    // const refreshToken = session?.refreshToken; // Remove this line if refreshToken is not used
 
-    const client = Client.init({
-        authProvider: (done) =>
-            done(
-                null,
-                accessToken // WHERE DO WE GET THIS FROM?
-            ),
+    if (!accessToken) {
+        throw new Error('No access token found');
+    }
+
+    const authProvider = new AnonymousAuthenticationProvider(async (request) => {
+        request.headers.set('Authorization', `Bearer ${accessToken}`);
     });
 
-    return client 
+    const adapter = new FetchRequestAdapter(authProvider);
+    return new GraphServiceClient(adapter);
+}
+
+export async function getEmails(count = 10): Promise<Mail[]> {
+    try {
+        const client = await getGraphClient();
+        const messages = await client.me.messages
+            .get({
+                $top: count,
+                $orderby: 'receivedDateTime DESC',
+                $select: ['id', 'subject', 'bodyPreview', 'receivedDateTime', 'from', 'isRead']
+            });
+
+        return messages.value?.map(convertToMail) ?? [];
+    } catch (error) {
+        console.error('Error fetching emails:', error);
+        return [];
+    }
+}
+
+function convertToMail(message: Message): Mail {
+    return {
+        id: message.id!,
+        name: message.from?.emailAddress?.name ?? 'Unknown',
+        email: message.from?.emailAddress?.address ?? 'unknown@example.com',
+        subject: message.subject ?? 'No Subject',
+        text: message.bodyPreview ?? '',
+        date: message.receivedDateTime?.toLocaleString() ?? '',
+        read: message.isRead ?? false,
+        labels: []
+    };
+}
+
+export async function markEmailAsRead(emailId: string): Promise<void> {
+    const client = await getGraphClient();
+    await client.me.messages.byMessageId(emailId).patch({
+        isRead: true
+    });
+}
+
+export async function deleteEmail(emailId: string): Promise<void> {
+    const client = await getGraphClient();
+    await client.me.messages.byMessageId(emailId).delete();
 }
