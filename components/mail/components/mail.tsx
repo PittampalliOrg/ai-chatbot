@@ -37,6 +37,8 @@ import { Nav } from "./nav"
 import { type Mail } from "../data"
 import { useMail } from "../use-mail"
 import { accounts } from "../data"
+import { MailFolder } from "@microsoft/microsoft-graph-types"
+import { getEmailFolders } from "@/app/actions"
 
 interface MailProps {
   accounts?: {
@@ -48,6 +50,7 @@ interface MailProps {
   defaultLayout?: number[] | undefined
   defaultCollapsed?: boolean
   navCollapsedSize?: number
+  mailFolders: MailFolder[]
 }
 
 export function Mail({
@@ -56,9 +59,17 @@ export function Mail({
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
   navCollapsedSize,
+  mailFolders,
 }: MailProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const [mail] = useMail()
+
+  const links = mailFolders.map((folder) => ({
+    title: folder.displayName as string,
+    label: folder.unreadItemCount?.toString() || "",
+    icon: Archive,
+    variant: "ghost"
+  }));
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -105,44 +116,7 @@ export function Mail({
           <Separator />
           <Nav
             isCollapsed={isCollapsed}
-            links={[
-              {
-                title: "Inbox",
-                label: "128",
-                icon: Inbox,
-                variant: "default",
-              },
-              {
-                title: "Drafts",
-                label: "9",
-                icon: File,
-                variant: "ghost",
-              },
-              {
-                title: "Sent",
-                label: "",
-                icon: Send,
-                variant: "ghost",
-              },
-              {
-                title: "Junk",
-                label: "23",
-                icon: ArchiveX,
-                variant: "ghost",
-              },
-              {
-                title: "Trash",
-                label: "",
-                icon: Trash2,
-                variant: "ghost",
-              },
-              {
-                title: "Archive",
-                label: "",
-                icon: Archive,
-                variant: "ghost",
-              },
-            ]}
+            links={links}
           />
           <Separator />
           <Nav
