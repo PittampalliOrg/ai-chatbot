@@ -1,8 +1,7 @@
 import 'server-only'
 import { AnonymousAuthenticationProvider } from '@microsoft/kiota-abstractions';
 import { FetchRequestAdapter } from '@microsoft/kiota-http-fetchlibrary';
-import { GraphRequestAdapter } from '@microsoft/msgraph-sdk-core';
-import { GraphServiceClient } from '@microsoft/msgraph-sdk';
+import { GraphRequestAdapter, GraphServiceClient } from '@microsoft/msgraph-sdk-core';
 import { auth, EnrichedSession } from '../auth';
 import { Message } from '@microsoft/microsoft-graph-types';
 import { Mail } from '../types';
@@ -20,8 +19,7 @@ export async function getGraphClient() {
     });
 
     const adapter = new FetchRequestAdapter(authProvider);
-    const graphAdapter = new GraphRequestAdapter(adapter);
-    return new GraphServiceClient(graphAdapter);
+    return new GraphServiceClient(adapter);
 }
 
 export async function getEmails(count: number = 10): Promise<Mail[]> {
