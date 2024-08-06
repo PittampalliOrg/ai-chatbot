@@ -15,9 +15,9 @@
   "dependencies": {
     "@ai-sdk/openai": "^0.0.34",
     "@hookform/resolvers": "^3.3.4",
-    "@microsoft/mgt-components": "^3.1.3",
-    "@microsoft/mgt-msal2-provider": "^3.1.3",
-    "@microsoft/mgt-react": "^3.1.3",
+    "@microsoft/mgt-components": "^4.2.3",
+    "@microsoft/mgt-msal2-provider": "^4.2.3",
+    "@microsoft/mgt-react": "^4.2.3",
     "@microsoft/kiota-abstractions": "^1.0.0-preview.39",
     "@microsoft/kiota-http-fetchlibrary": "^1.0.0-preview.39",
     "@microsoft/msgraph-sdk": "^1.0.0-preview.8",
