@@ -20,7 +20,7 @@
     "@microsoft/mgt-react": "latest",
     "@microsoft/kiota-abstractions": "^1.0.0-preview.58",
     "@microsoft/kiota-http-fetchlibrary": "^1.0.0-preview.39",
-    "@microsoft/msgraph-sdk": "^6.0.0-preview.24",
+    "@microsoft/msgraph-sdk": "^1.0.0-preview.26",
     "@microsoft/msgraph-sdk-core": "^3.0.0-preview.20",
     "@microsoft/microsoft-graph-types": "^2.40.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
