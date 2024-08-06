@@ -14,8 +14,7 @@ export default function MessagesPage() {
     async function fetchMessages() {
       try {
         const graphClient = await getGraphClient();
-        const authProvider = graphClient.getAuthenticationProvider();
-        const apiClient = new ApiClient(authProvider);
+        const apiClient = new ApiClient(graphClient);
 
         const response = await apiClient.me.messages.get({
           queryParameters: {
