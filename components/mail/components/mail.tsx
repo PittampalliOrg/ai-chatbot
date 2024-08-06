@@ -56,13 +56,27 @@ interface MailProps {
 
 export function Mail({
   accounts,
-  mails,
+  mailFolders,
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
   navCollapsedSize,
 }: MailProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const [mail] = useMail()
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+
+  useEffect(() => {
+    if (selectedFolderId) {
+      fetchMessagesForFolder(selectedFolderId)
+        .then(fetchedMessages => setMessages(fetchedMessages))
+        .catch(error => console.error('Error fetching messages:', error));
+    }
+  }, [selectedFolderId]);
+
+  const handleFolderSelect = (folderId: string) => {
+    setSelectedFolderId(folderId);
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -109,44 +123,12 @@ export function Mail({
           <Separator />
           <Nav
             isCollapsed={isCollapsed}
-            links={[
-              {
-                title: "Inbox",
-                label: "128",
-                icon: Inbox,
-                variant: "default",
-              },
-              {
-                title: "Drafts",
-                label: "9",
-                icon: File,
-                variant: "ghost",
-              },
-              {
-                title: "Sent",
-                label: "",
-                icon: Send,
-                variant: "ghost",
-              },
-              {
-                title: "Junk",
-                label: "23",
-                icon: ArchiveX,
-                variant: "ghost",
-              },
-              {
-                title: "Trash",
-                label: "",
-                icon: Trash2,
-                variant: "ghost",
-              },
-              {
-                title: "Archive",
-                label: "",
-                icon: Archive,
-                variant: "ghost",
-              },
-            ]}
+            links={mailFolders.map(folder => ({
+              title: folder.displayName,
+              icon: Inbox,
+              variant: "ghost",
+              onClick: () => handleFolderSelect(folder.id)
+            }))}
           />
           <Separator />
           <Nav
