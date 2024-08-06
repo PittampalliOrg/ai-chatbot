@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { ApiClient } from '../../kiota/apiClient';
-import { ApiClientFactory } from '../../kiota/apiClientFactory';
 import getGraphClient from '../db';
 import { Message } from '../../kiota/models';
+import { auth, EnrichedSession } from '@/auth'; // R
+
 
 export default function MessagesPage() {
+
+  const session = (await auth()) as EnrichedSession;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +18,7 @@ export default function MessagesPage() {
   useEffect(() => {
     async function fetchMessages() {
       try {
-        const graphClient = await getGraphClient();
+
         const apiClient = ApiClientFactory.create(graphClient);
 
         const response = await apiClient.me.messages.get({
