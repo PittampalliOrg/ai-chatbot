@@ -38,18 +38,18 @@ export default function MessagesPage() {
   }, []);
 
   if (loading) {
-    return <div aria-live="polite">Loading messages...</div>;
+    return <div aria-live="polite" role="status">Loading messages...</div>;
   }
 
   if (error) {
-    return <div aria-live="assertive">Error: {error}</div>;
+    return <div aria-live="assertive" role="alert">Error: {error}</div>;
   }
 
   return (
     <main className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Recent Messages</h1>
       {messages.length > 0 ? (
-        <ul className="space-y-4">
+        <ul className="space-y-4" aria-label="List of recent messages">
           {messages.map((message) => (
             <li key={message.id} className="border p-4 rounded-lg">
               <h2 className="font-semibold">{message.subject || 'No Subject'}</h2>
@@ -61,7 +61,7 @@ export default function MessagesPage() {
           ))}
         </ul>
       ) : (
-        <p>No messages found.</p>
+        <p aria-live="polite">No messages found.</p>
       )}
     </main>
   );
