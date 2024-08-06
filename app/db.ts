@@ -23,15 +23,20 @@ export async function getGraphClient() {
 }
 
 export async function getEmails(count = 10): Promise<Mail[]> {
-    const client = await getGraphClient();
-    const messages = await client.me.messages
-        .get({
-            $top: count,
-            $orderby: 'receivedDateTime DESC',
-            $select: ['id', 'subject', 'bodyPreview', 'receivedDateTime', 'from', 'isRead']
-        });
+    try {
+        const client = await getGraphClient();
+        const messages = await client.me.messages
+            .get({
+                $top: count,
+                $orderby: 'receivedDateTime DESC',
+                $select: ['id', 'subject', 'bodyPreview', 'receivedDateTime', 'from', 'isRead']
+            });
 
-    return messages.value?.map(convertToMail) ?? [];
+        return messages.value?.map(convertToMail) ?? [];
+    } catch (error) {
+        console.error('Error fetching emails:', error);
+        return [];
+    }
 }
 
 function convertToMail(message: Message): Mail {

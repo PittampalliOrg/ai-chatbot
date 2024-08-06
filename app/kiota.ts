@@ -1,10 +1,15 @@
 import { GraphServiceClient } from '@microsoft/msgraph-sdk';
 import { getGraphClient } from './db';
 
-export async function getUser(): Promise<any> {
-    const client = await getGraphClient();
-    const user = await client.me.get();
-    return user;
+export async function getUser(): Promise<User | null> {
+    try {
+        const client = await getGraphClient();
+        const user = await client.me.get();
+        return user;
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        return null;
+    }
 }
 
 export async function getUserPhoto() {
