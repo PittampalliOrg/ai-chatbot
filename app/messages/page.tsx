@@ -39,22 +39,22 @@ export default function MessagesPage() {
   }, []);
 
   if (loading) {
-    return <div aria-live="polite" role="status">Loading messages...</div>;
+    return <div aria-live="polite" role="status" className="text-center mt-8">Loading messages...</div>;
   }
 
   if (error) {
-    return <div aria-live="assertive" role="alert">Error: {error}</div>;
+    return <div aria-live="assertive" role="alert" className="text-red-600 text-center mt-8">Error: {error}</div>;
   }
 
   return (
-    <main className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Recent Messages</h1>
+    <main className="container mx-auto p-4 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-6 text-center">Recent Messages</h1>
       {messages.length > 0 ? (
-        <ul className="space-y-4" aria-label="List of recent messages">
+        <ul className="space-y-6" aria-label="List of recent messages">
           {messages.map((message) => (
-            <li key={message.id} className="border p-4 rounded-lg">
-              <h2 className="font-semibold">{message.subject || 'No Subject'}</h2>
-              <p className="text-sm text-gray-600">From: {message.from?.emailAddress?.name || 'Unknown Sender'}</p>
+            <li key={message.id} className="border p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+              <h2 className="font-semibold text-lg mb-2">{message.subject || 'No Subject'}</h2>
+              <p className="text-sm text-gray-600 mb-1">From: {message.from?.emailAddress?.name || 'Unknown Sender'}</p>
               <p className="text-sm text-gray-600">
                 Received: {message.receivedDateTime ? new Date(message.receivedDateTime).toLocaleString() : 'Unknown Date'}
               </p>
@@ -62,7 +62,7 @@ export default function MessagesPage() {
           ))}
         </ul>
       ) : (
-        <p aria-live="polite">No messages found.</p>
+        <p aria-live="polite" className="text-center text-gray-600 mt-8">No messages found.</p>
       )}
     </main>
   );
