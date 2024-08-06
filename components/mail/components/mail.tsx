@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useState, useEffect } from 'react'
 import {
   AlertCircle,
   Archive,
@@ -36,7 +37,8 @@ import { MailList } from "./mail-list"
 import { Nav } from "./nav"
 import { type Mail } from "../data"
 import { useMail } from "../use-mail"
-import { accounts } from "../data"
+import { fetchMessagesForFolder } from '../../../app/mail/actions'
+import { Message } from '@microsoft/microsoft-graph-types'
 
 import { useState, useEffect } from 'react';
 import { fetchMessagesForFolder } from '../../../app/mail/actions';
@@ -197,17 +199,17 @@ export function Mail({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <MailList items={mails} />
+              <MailList items={messages} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={mails.filter((item) => !item.read)} />
+              <MailList items={messages.filter((item) => !item.read)} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
           <MailDisplay
-            mail={mails.find((item) => item.id === mail.selected) || null}
+            mail={messages.find((item) => item.id === mail.selected) || null}
           />
         </ResizablePanel>
       </ResizablePanelGroup>
