@@ -1,7 +1,7 @@
 import { GraphServiceClient } from '@microsoft/msgraph-sdk';
 import { getGraphClient } from './db';
 
-export async function getUser() {
+export async function getUser(): Promise<any> {
     const client = await getGraphClient();
     const user = await client.me.get();
     return user;
@@ -18,7 +18,7 @@ export async function getUserPhoto() {
     }
 }
 
-export async function sendEmail(to: string, subject: string, body: string) {
+export async function sendEmail(to: string, subject: string, body: string): Promise<void> {
     const client = await getGraphClient();
     await client.me.sendMail.post({
         message: {

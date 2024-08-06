@@ -22,7 +22,7 @@ export async function getGraphClient() {
     return new GraphServiceClient(adapter);
 }
 
-export async function getEmails(count: number = 10): Promise<Mail[]> {
+export async function getEmails(count = 10): Promise<Mail[]> {
     const client = await getGraphClient();
     const messages = await client.me.messages
         .get({
