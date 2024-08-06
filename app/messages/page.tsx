@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ApiClient } from '../../kiota/apiClient';
+import { ApiClientFactory } from '../../kiota/apiClientFactory';
 import getGraphClient from '../db';
 import { Message } from '../../kiota/models';
 
@@ -14,7 +15,7 @@ export default function MessagesPage() {
     async function fetchMessages() {
       try {
         const graphClient = await getGraphClient();
-        const apiClient = new ApiClient(graphClient);
+        const apiClient = ApiClientFactory.create(graphClient);
 
         const response = await apiClient.me.messages.get({
           queryParameters: {
