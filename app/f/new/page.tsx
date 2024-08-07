@@ -4,17 +4,20 @@ import { getAllEmailAddresses } from '@/app/messages/db/queries';
 import { SendIcon } from '@/app/messages/icons/send';
 import { EmailBody } from './email-body';
 import { FolderColumn } from '@/app/messages/components/folder-column';
+import { auth, EnrichedSession } from '@/auth';
 
 export default function Page() {
   return (
     <div className="grid grid-cols-6 gap-2 h-screen p-2">
-      <FolderColumn />
+      <FolderColumn isCollapsed={false} links={[]} id={''} name={''} email_count={''} />
       <Compose />
     </div>
   );
 }
 
 async function Compose() {
+  const session = (await auth()) as EnrichedSession;
+  
   const userEmails = await getAllEmailAddresses();
 
   return (
@@ -37,7 +40,7 @@ async function Compose() {
             From:
           </label>
           <p className="pl-14 border-none bg-white dark:bg-gray-950 text-black dark:text-white px-3 py-2 focus:outline-none">
-            your@email.com
+            {session?.user?.email}
           </p>
         </div>
         <hr className="border-t border-gray-200 dark:border-gray-800" />

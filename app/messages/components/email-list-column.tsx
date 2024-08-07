@@ -26,7 +26,11 @@ export async function EmailListColumn({
             <li className="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex justify-between items-start rounded-lg">
               <div className="w-full truncate">
                 <h2 className="text-base font-bold">
-                  {formatEmailString(email)}
+                  {formatEmailString({
+                    first_name: email.first_name,
+                    last_name: email.last_name,
+                    email: email.email,
+                  })}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {email.subject}

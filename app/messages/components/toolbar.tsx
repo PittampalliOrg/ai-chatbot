@@ -22,7 +22,7 @@ export function Toolbar() {
     <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 py-4 px-2 sticky top-0 h-[60px]">
       <div className="space-x-1">
         <Link
-          href={`/f/${params.name}/new`}
+          href={`/f/new`}
           className="inline-flex hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-3 py-2"
         >
           <EmailIcon />

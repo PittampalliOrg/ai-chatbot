@@ -4,7 +4,7 @@ import  getGraphClient from '@/app/db'
 import { Message } from '@microsoft/microsoft-graph-types';
 import { removeSpacesFromFolderName } from './utils';
 
-type Folder = {
+export type Folder = {
   id: string;
   name: string;
   email_count: string;
@@ -26,7 +26,7 @@ export async function getFoldersWithEmailCount() {
       email_count: folder.totalItemCount,
     }));
 
-  let specialFoldersOrder = ['Inbox', 'Flagged', 'Sent'];
+  let specialFoldersOrder = ['Inbox', 'Drafts', 'Deleted Items'];
   let specialFolders = specialFoldersOrder
     .map((name) => folders.find((folder) => folder.name === name))
     .filter(Boolean) as Folder[];
