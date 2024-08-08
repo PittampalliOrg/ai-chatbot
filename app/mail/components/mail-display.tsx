@@ -42,13 +42,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../../components/ui/tooltip"
-import { Mail } from "../../../components/mail/data"
+import { Message } from "@microsoft/microsoft-graph-types"
+import { getEmailsForFolder } from "@/app/messages/db/queries"
 
-interface MailDisplayProps {
-  mail: Mail | null
-}
-
-export function MailDisplay({ mail }: MailDisplayProps) {
+export async function MailDisplay() {
+  const mail: Message[] = await getEmailsForFolder("inbox")
   const today = new Date()
 
   return (
@@ -194,31 +192,31 @@ export function MailDisplay({ mail }: MailDisplayProps) {
           <div className="flex items-start p-4">
             <div className="flex items-start gap-4 text-sm">
               <Avatar>
-                <AvatarImage alt={mail.name} />
-                <AvatarFallback>
-                  {mail.name
+                <AvatarImage alt={mail[0].sender?.emailAddress?.name ?? ""} />
+                {/* <AvatarFallback>
+                  {mail[0].sender?.emailAddress?.name ?? "Unknown"}
                     .split(" ")
-                    .map((chunk) => chunk[0])
+                    .map((chunk: string) => chunk[0])
                     .join("")}
-                </AvatarFallback>
+                </AvatarFallback> */}
               </Avatar>
               <div className="grid gap-1">
-                <div className="font-semibold">{mail.name}</div>
-                <div className="line-clamp-1 text-xs">{mail.subject}</div>
+                <div className="font-semibold">{mail[0]?.sender?.emailAddress?.name}</div>
+                <div className="line-clamp-1 text-xs">{mail[0].subject}</div>
                 <div className="line-clamp-1 text-xs">
-                  <span className="font-medium">Reply-To:</span> {mail.email}
+                  <span className="font-medium">Reply-To:</span> {mail[0].sender?.emailAddress?.address}
                 </div>
               </div>
             </div>
-            {mail.date && (
+            {mail[0].sentDateTime && (
               <div className="ml-auto text-xs text-muted-foreground">
-                {format(new Date(mail.date), "PPpp")}
+                {format(new Date(mail[0].sentDateTime), "PPpp")}
               </div>
             )}
           </div>
           <Separator />
           <div className="flex-1 whitespace-pre-wrap p-4 text-sm">
-            {mail.text}
+            {mail[0].body?.content}
           </div>
           <Separator className="mt-auto" />
           <div className="p-4">
@@ -226,7 +224,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
               <div className="grid gap-4">
                 <Textarea
                   className="p-4"
-                  placeholder={`Reply ${mail.name}...`}
+                  placeholder={`Reply ${mail[0].sender?.emailAddress?.name}...`}
                 />
                 <div className="flex items-center">
                   <Label
@@ -237,9 +235,9 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                     thread
                   </Label>
                   <Button
-                    onClick={(e) => e.preventDefault()}
-                    size="sm"
-                    className="ml-auto"
+                    // onClick={(e) => e.preventDefault()}
+                    // size="sm"
+                    // className="ml-auto"
                   >
                     Send
                   </Button>

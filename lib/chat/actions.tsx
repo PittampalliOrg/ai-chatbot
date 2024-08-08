@@ -14,7 +14,8 @@ import {
   spinner,
   BotCard,
   BotMessage,
-  SystemMessage} from '@/components/stocks'
+  SystemMessage
+} from '@/components/stocks'
 
 import { z } from 'zod'
 import {
@@ -31,8 +32,8 @@ import WeatherCard from '@/components/weather/weather'
 import { TodoList } from '@/components/tasks/tasks'
 import Search from '@/components/search'
 import { Mail as MailType, OptimisticTask } from '@/types'
-import { Mail } from '@/components/mail/components/mail'
-import { accounts } from '@/components/mail/data'
+import { Mail } from '@/app/mail/components/mail'
+import { accounts } from '@/app/mail/data'
 import { TaskComboboxForm } from '@/components/tasks/tasks-combobox-form'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
@@ -321,7 +322,7 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="/>
+              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=" />
             </BotCard>
           );;
         },
@@ -333,7 +334,7 @@ Your responses should be clear, concise, and focused on task management. Always 
         }),
         generate: async function* ({ titles }) {
           const toolCallId = nanoid();
-      
+
           aiState.done({
             ...aiState.get(),
             messages: [
@@ -366,15 +367,15 @@ Your responses should be clear, concise, and focused on task management. Always 
           });
           console.log(titles);
           let addTaskResponse = await addTasks("AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", titles);
-          
+
           return (
             <BotCard>
-              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="  initialTasks={addTaskResponse} />
+              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=" initialTasks={addTaskResponse} />
             </BotCard>
           );
         },
       },
-      
+
       deleteTasks: {
         description: 'Delete tasks from a specified task list.',
         parameters: z.object({
@@ -383,7 +384,7 @@ Your responses should be clear, concise, and focused on task management. Always 
         }),
         generate: async function* ({ listId, taskIds }) {
           const toolCallId = nanoid();
-      
+
           aiState.done({
             ...aiState.get(),
             messages: [
@@ -414,9 +415,9 @@ Your responses should be clear, concise, and focused on task management. Always 
               },
             ],
           });
-      
+
           const deletedTasks = await deleteTasks(listId, taskIds);
-      
+
           return (
             <BotCard>
               <p>Tasks</p>
@@ -467,12 +468,12 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <Mail mails={items} accounts={accounts}/>
+              <Mail mails={items} accounts={accounts} />
             </BotCard>
           );;
         },
       },
-      
+
       // search_query: {
       //   description: 'Execute a search query on the Microsoft Graph API to find files based on user-defined criteria.',
       //   parameters: z.object({

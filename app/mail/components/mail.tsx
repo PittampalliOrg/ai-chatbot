@@ -1,74 +1,60 @@
-"use client"
-
-import * as React from "react"
+import { Suspense } from "react"
 import {
-  AlertCircle,
-  Archive,
-  ArchiveX,
-  File,
-  Inbox,
-  MessagesSquare,
+  AlertCircleIcon,
+  ArchiveIcon,
+  ArchiveXIcon,
+  FileIcon,
+  InboxIcon,
+  MessagesSquareIcon,
   Search,
-  Send,
-  ShoppingCart,
-  Trash2,
-  Users2,
+  SendIcon,
+  ShoppingCartIcon,
+  Trash2Icon,
+  Users2Icon,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { Input } from "../../../components/ui/input"
+import { Input } from "@/components/ui/input"
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "../../../components/ui/resizable"
-import { Separator } from "../../../components/ui/separator"
+} from "@/components/ui/resizable"
+import { Separator } from "@/components/ui/separator"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs"
-import { TooltipProvider } from "../../../components/ui/tooltip"
-import { AccountSwitcher } from "./account-switcher"
+} from "@/components/ui/tabs"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { MailDisplay } from "./mail-display"
 import { MailList } from "./mail-list"
 import { Nav } from "./nav"
-import { type Mail } from "../data"
-import { useMail } from "../use-mail"
+import { Message } from "@microsoft/microsoft-graph-types"
+import { getEmailsForFolder } from "@/app/messages/db/queries"
+import { AccountSwitcherWrapper } from "./account-switcher-wrapper"
+
+// get accounts from data
 import { accounts } from "../data"
 
 interface MailProps {
-  accounts?: {
-    label: string
-    email: string
-    icon: React.ReactNode
-  }[]
-  mails: Mail[]
   defaultLayout?: number[] | undefined
   defaultCollapsed?: boolean
   navCollapsedSize?: number
+  params: { name: string }
 }
-
-export function Mail({
-  accounts,
-  mails,
+export async function Mail({
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
   navCollapsedSize,
+  params
 }: MailProps) {
-  const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
-  const [mail] = useMail()
+  const mails: Message[] = await getEmailsForFolder(params.name)
 
   return (
     <TooltipProvider delayDuration={0}>
       <ResizablePanelGroup
         direction="horizontal"
-        onLayout={(sizes: number[]) => {
-          document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify(
-            sizes
-          )}`
-        }}
         className="h-full max-h-[800px] items-stretch"
       >
         <ResizablePanel
@@ -77,108 +63,88 @@ export function Mail({
           collapsible={true}
           minSize={15}
           maxSize={20}
-          onCollapse={() => {
-            setIsCollapsed(true)
-            document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
-              true
-            )}`
-          }}
-          onResize={() => {
-            setIsCollapsed(false)
-            document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
-              false
-            )}`
-          }}
-          className={cn(
-            isCollapsed &&
-              "min-w-[50px] transition-all duration-300 ease-in-out"
-          )}
+          className="min-w-[50px] transition-all duration-300 ease-in-out"
         >
-          <div
-            className={cn(
-              "flex h-[52px] items-center justify-center",
-              isCollapsed ? "h-[52px]" : "px-2"
-            )}
-          >
-            <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts!} />
-          </div>
+          <Suspense fallback={<div>Loading accounts...</div>}>
+            <AccountSwitcherWrapper accounts={accounts} />
+          </Suspense>
           <Separator />
           <Nav
-            isCollapsed={isCollapsed}
             links={[
               {
                 title: "Inbox",
                 label: "128",
-                icon: Inbox,
+                icon: "InboxIcon",
                 variant: "default",
               },
               {
                 title: "Drafts",
                 label: "9",
-                icon: File,
+                icon: "FileIcon",
                 variant: "ghost",
               },
               {
                 title: "Sent",
                 label: "",
-                icon: Send,
+                icon: "SendIcon",
                 variant: "ghost",
               },
               {
                 title: "Junk",
                 label: "23",
-                icon: ArchiveX,
+                icon: "ArchiveXIcon",
                 variant: "ghost",
               },
               {
                 title: "Trash",
                 label: "",
-                icon: Trash2,
+                icon: "Trash2Icon",
                 variant: "ghost",
               },
               {
                 title: "Archive",
                 label: "",
-                icon: Archive,
+                icon: "ArchiveIcon",
                 variant: "ghost",
               },
             ]}
+            isCollapsed={false}
           />
           <Separator />
           <Nav
-            isCollapsed={isCollapsed}
             links={[
               {
                 title: "Social",
                 label: "972",
-                icon: Users2,
+                icon: "Users2Icon",
                 variant: "ghost",
               },
               {
                 title: "Updates",
                 label: "342",
-                icon: AlertCircle,
+                icon: "AlertCircleIcon",
                 variant: "ghost",
               },
               {
                 title: "Forums",
                 label: "128",
-                icon: MessagesSquare,
+                icon: "MessagesSquareIcon",
                 variant: "ghost",
               },
               {
                 title: "Shopping",
                 label: "8",
-                icon: ShoppingCart,
+                icon: "ShoppingCartIcon",
                 variant: "ghost",
               },
               {
                 title: "Promotions",
                 label: "21",
-                icon: Archive,
+                icon: "ArchiveIcon",
                 variant: "ghost",
               },
             ]}
+            isCollapsed={false}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
@@ -211,20 +177,25 @@ export function Mail({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <MailList items={mails} />
+              <Suspense fallback={<div>Loading emails...</div>}>
+                <MailList />
+              </Suspense>
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <MailList items={mails.filter((item) => !item.read)} />
+              <Suspense fallback={<div>Loading unread emails...</div>}>
+                <MailList />
+              </Suspense>
             </TabsContent>
           </Tabs>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={defaultLayout[2]} minSize={30}>
-          <MailDisplay
-            mail={mails.find((item) => item.id === mail.selected) || null}
-          />
+          <Suspense fallback={<div>Loading email content...</div>}>
+            <MailDisplay />
+          </Suspense>
         </ResizablePanel>
       </ResizablePanelGroup>
     </TooltipProvider>
   )
 }
+

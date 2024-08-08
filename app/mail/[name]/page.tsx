@@ -1,26 +1,15 @@
 import { cookies } from "next/headers"
 import Image from "next/image"
 
-import { Mail } from "@/components/mail/components/mail"
-import { getEmailFolders, getEmails } from "../../actions"
-import { Mail as MailType } from "@/types"
-import { accounts } from "@/components/mail/data"
+import { Mail } from "@/app/mail/components/mail"
 
-export default async function MailPage({
-  params,
-  searchParams,
-}: {
-  params: { name: string; id: string };
-  searchParams: { q?: string; id?: string };
-}) {
+export default async function Page({ params }: { params: { name: string } }) {
   const layout = cookies().get("react-resizable-panels:layout:mail")
   const collapsed = cookies().get("react-resizable-panels:collapsed")
 
   const defaultLayout = layout ? JSON.parse(layout.value) : undefined
   const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined
 
-  const mailFolders = await getEmailFolders()
-  const mails = await getEmails()
   return (
     <>
       <div className="md:hidden">
@@ -40,15 +29,11 @@ export default async function MailPage({
         />
       </div>
       <div className="hidden flex-col md:flex">
-        <Mail
-          accounts={accounts}
-          mails={mails}
+      <Mail
           defaultLayout={defaultLayout}
           defaultCollapsed={defaultCollapsed}
           navCollapsedSize={4}
-          mailFolders={mailFolders}
           params={params}
-          searchParams={searchParams}
         />
       </div>
     </>

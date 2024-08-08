@@ -9,6 +9,7 @@ import { type Chat } from '@/lib/types'
 import { TodoTask, TodoTaskList, Message, MailFolder } from '@microsoft/microsoft-graph-types'
 import  getGraphClient from '@/app/db'
 import { OptimisticTask, Mail } from '@/types'
+import { removeSpacesFromFolderName } from './messages/db/utils'
 
 export async function getChats(userId?: string | null) {
   const session = (await auth()) as EnrichedSession;
@@ -350,9 +351,9 @@ export async function getEmailFolders(): Promise<MailFolder[]> {
   return response.value;
 }
 
-export async function getMessagesForFolder(folderName: string, folderId: string): Promise<Mail[]>  {
+export async function getMessagesForFolder(folderName: string = "Inbox"): Promise<Mail[]>  {
   const client = await getGraphClient();
-  const response = await client.api(`/me/mailFolders/${folderId}/messages`)
+  const response = await client.api(`/me/mailFolders/${removeSpacesFromFolderName(folderName)}/messages`)
     .select('subject,from,receivedDateTime,bodyPreview')
     .top(50)
     .get();
