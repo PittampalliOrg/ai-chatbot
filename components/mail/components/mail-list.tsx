@@ -7,59 +7,83 @@ import { ScrollArea } from "../../../components/ui/scroll-area"
 import { Separator } from "../../../components/ui/separator"
 import { Mail } from "../../../components/mail/data"
 import { useMail } from "../../../components/mail/use-mail"
-import { getMessagesForFolder } from "@/app/actions"
-import Link from 'next/link';
-import { formatEmailString } from "@/app/messages/db/utils";
 
 interface MailListProps {
   items: Mail[]
 }
 
-export async function EmailListColumn({
-  folderName,
-  searchParams,
-}: {
-  folderName: string;
-  searchParams: { q?: string; id?: string };
-}) {
-  const emails = await getMessagesForFolder(folderName, searchParams.q || "");
-
-  function createUrl(id: string) {
-    const baseUrl = `/f/${folderName.toLowerCase()}`;
-    const params = new URLSearchParams(searchParams);
-    // params.set('id', id.toString());
-    return `${baseUrl}?${params.toString()}`;
-  }
+export function MailList({ items }: MailListProps) {
+  const [mail, setMail] = useMail()
 
   return (
-    <div className="border-r border-gray-200 dark:border-gray-800 overflow-y-auto p-2 col-span-2">
-      <ul className="divide-y divide-gray-200 dark:divide-gray-800">
-        {emails.map((email) => (
-          <Link key={email.id} href={createUrl(email.id)}>
-            <li className="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex justify-between items-start rounded-lg">
-              <div className="w-full truncate">
-                <h2 className="text-base font-bold">
-                  {formatEmailString({
-                    first_name: email.name,
-                    last_name: email.name,
-                    email: email.email,
+    <ScrollArea className="h-screen">
+      <div className="flex flex-col gap-2 p-4 pt-0">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            className={cn(
+              "flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
+              mail.selected === item.id && "bg-muted"
+            )}
+            onClick={() =>
+              setMail({
+                ...mail,
+                selected: item.id,
+              })
+            }
+          >
+            <div className="flex w-full flex-col gap-1">
+              <div className="flex items-center">
+                <div className="flex items-center gap-2">
+                  <div className="font-semibold">{item.name}</div>
+                  {!item.read && (
+                    <span className="flex h-2 w-2 rounded-full bg-blue-600" />
+                  )}
+                </div>
+                <div
+                  className={cn(
+                    "ml-auto text-xs",
+                    mail.selected === item.id
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {formatDistanceToNow(new Date(item.date), {
+                    addSuffix: true,
                   })}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {email.subject}
-                </p>
-                <p className="text-sm truncate overflow-ellipsis">
-                  {email.text}
-                </p>
+                </div>
               </div>
-              <time className="text-xs text-gray-500 dark:text-gray-400 self-center flex justify-end">
-                {new Date(email.date).toLocaleDateString()}
-              </time>
-            </li>
-          </Link>
+              <div className="text-xs font-medium">{item.subject}</div>
+            </div>
+            <div className="line-clamp-2 text-xs text-muted-foreground">
+              {item.text.substring(0, 300)}
+            </div>
+            {item.labels.length ? (
+              <div className="flex items-center gap-2">
+                {item.labels.map((label) => (
+                  <Badge key={label} variant={getBadgeVariantFromLabel(label)}>
+                    {label}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+          </button>
         ))}
-      </ul>
-    </div>
-  );
+      </div>
+    </ScrollArea>
+  )
 }
 
+function getBadgeVariantFromLabel(
+  label: string
+): ComponentProps<typeof Badge>["variant"] {
+  if (["work"].includes(label.toLowerCase())) {
+    return "default"
+  }
+
+  if (["personal"].includes(label.toLowerCase())) {
+    return "outline"
+  }
+
+  return "secondary"
+}
