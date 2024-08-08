@@ -49,7 +49,7 @@ type EmailWithSender = {
   email: string;
 };
 
-export async function getEmailsForFolder(folderName: string, search?: string) {
+export async function getEmailsForFolder(folderName: string) {
   // Authentication setup should be done outside this function and passed in if needed
   const client = await getGraphClient();
 
@@ -57,7 +57,7 @@ export async function getEmailsForFolder(folderName: string, search?: string) {
   let originalFolderName = removeSpacesFromFolderName(folderName);
 
   let endpoint = `/me/mailFolders/${originalFolderName}/messages`;
-  let queryParams = new Array<string>();
+  // let queryParams = new Array<string>();
 
   // Add search filter if provided
   // if (search) {
@@ -78,19 +78,19 @@ export async function getEmailsForFolder(folderName: string, search?: string) {
 
   try {
       const response = await client.api(endpoint).get();
-      const graphEmails: Message[] = response.value;
+      const emails: Message[] = response.value;
       // Transform the Graph API response to match the EmailWithSender type
-      const emails: EmailWithSender[] = graphEmails.map((email: Message) => ({
-        id: email.id || "",  // Graph API uses string IDs, so we parse to int
-        sender_id: email.from?.emailAddress?.address || "",  // We don't have this info from Graph API
-        recipient_id: email.toRecipients && email.toRecipients.length > 0 ? email.toRecipients[0].emailAddress?.address || "" : "",  // We don't have this info from Graph API
-        subject: email.subject || "",
-        body: email.body?.content || "",
-        sent_date: email?.sentDateTime ? new Date(email.sentDateTime) : new Date(),
-        first_name: email.from?.emailAddress?.name || "", // .split(' ')[0],
-        last_name: email.from?.emailAddress?.name || "", // .split(' ').slice(1).join(' '),
-        email: email.from?.emailAddress?.address || ""
-      }));
+      // const emails: EmailWithSender[] = graphEmails.map((email: Message) => ({
+      //   id: email.id || "",  // Graph API uses string IDs, so we parse to int
+      //   sender_id: email.from?.emailAddress?.address || "",  // We don't have this info from Graph API
+      //   recipient_id: email.toRecipients && email.toRecipients.length > 0 ? email.toRecipients[0].emailAddress?.address || "" : "",  // We don't have this info from Graph API
+      //   subject: email.subject || "",
+      //   body: email.body?.content || "",
+      //   sent_date: email?.sentDateTime ? new Date(email.sentDateTime) : new Date(),
+      //   first_name: email.from?.emailAddress?.name || "", // .split(' ')[0],
+      //   last_name: email.from?.emailAddress?.name || "", // .split(' ').slice(1).join(' '),
+      //   email: email.from?.emailAddress?.address || ""
+      // }));
   
       return emails;
     } catch (error) {

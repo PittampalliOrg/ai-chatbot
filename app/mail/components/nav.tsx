@@ -16,7 +16,7 @@ interface NavProps {
   links: {
     title: string
     label?: string
-    icon: LucideIcon
+    icon: string
     variant: "default" | "ghost"
   }[]
 }
@@ -41,7 +41,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
                       "dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-white"
                   )}
                 >
-                  <link.icon className="h-4 w-4" />
+                  <link.icon  />
                   <span className="sr-only">{link.title}</span>
                 </Link>
               </TooltipTrigger>
@@ -65,7 +65,7 @@ export function Nav({ links, isCollapsed }: NavProps) {
                 "justify-start"
               )}
             >
-              <link.icon className="mr-2 h-4 w-4" />
+              <link.icon  />
               {link.title}
               {link.label && (
                 <span

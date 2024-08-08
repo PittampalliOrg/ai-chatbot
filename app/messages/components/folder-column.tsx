@@ -38,7 +38,7 @@ interface NavProps extends Folder {
   links: {
     title: string
     label?: string
-    icon: LucideIcon
+    icon: string
     variant: "default" | "ghost"
   }[]
 }
@@ -50,14 +50,14 @@ export async function FolderColumn() {
   const links = specialFolders.map((folder) => ({
     title: folder.name,
     label: folder.email_count,
-    icon: folder.name === 'Inbox' ? Inbox : folder.name === 'Drafts' ? Flag : Trash2,
+    icon: folder.name === 'Inbox' ? "" : folder.name === 'Drafts' ? "" : "",
     variant: "default" as const
   }));
 
   const otherLinks = otherFolders.map((folder) => ({
     title: folder.name,
     label: folder.email_count,
-    icon: FolderIcon,
+    icon: "",
     variant: "default" as const
   }));
 
@@ -80,7 +80,7 @@ export async function FolderColumn() {
                     "dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-white"
                   )}
                 >
-                  <link.icon className="h-4 w-4" />
+                  <link.icon />
                   <span className="sr-only">{link.title}</span>
                 </Link>
               </TooltipTrigger>
@@ -104,7 +104,7 @@ export async function FolderColumn() {
                 "justify-start"
               )}
             >
-              <link.icon className="mr-2 h-4 w-4" />
+              <link.icon />
               {link.title}
               {link.label && (
                 <span
