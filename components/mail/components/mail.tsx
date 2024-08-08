@@ -32,17 +32,13 @@ import {
 import { TooltipProvider } from "../../../components/ui/tooltip"
 import { AccountSwitcher } from "./account-switcher"
 import { MailDisplay } from "./mail-display"
-import { EmailListColumn } from "./mail-list"
+import { MailList } from "./mail-list"
 import { Nav } from "./nav"
 import { type Mail } from "../data"
 import { useMail } from "../use-mail"
 import { accounts } from "../data"
-import { MailFolder } from "@microsoft/microsoft-graph-types"
-import { getEmailFolders } from "@/app/actions"
 
 interface MailProps {
-  params: { name: string; id: string };
-  searchParams: { q?: string; id?: string };
   accounts?: {
     label: string
     email: string
@@ -52,28 +48,17 @@ interface MailProps {
   defaultLayout?: number[] | undefined
   defaultCollapsed?: boolean
   navCollapsedSize?: number
-  mailFolders: MailFolder[]
 }
 
 export function Mail({
-  params,
-  searchParams,
   accounts,
   mails,
   defaultLayout = [20, 32, 48],
   defaultCollapsed = false,
   navCollapsedSize,
-  mailFolders,
 }: MailProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed)
   const [mail] = useMail()
-
-  const links = mailFolders.map((folder) => ({
-    title: folder.displayName as string,
-    label: folder.unreadItemCount?.toString() || "",
-    icon: Archive,
-    variant: "default" as const
-  }));
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -120,7 +105,44 @@ export function Mail({
           <Separator />
           <Nav
             isCollapsed={isCollapsed}
-            links={links}
+            links={[
+              {
+                title: "Inbox",
+                label: "128",
+                icon: Inbox,
+                variant: "default",
+              },
+              {
+                title: "Drafts",
+                label: "9",
+                icon: File,
+                variant: "ghost",
+              },
+              {
+                title: "Sent",
+                label: "",
+                icon: Send,
+                variant: "ghost",
+              },
+              {
+                title: "Junk",
+                label: "23",
+                icon: ArchiveX,
+                variant: "ghost",
+              },
+              {
+                title: "Trash",
+                label: "",
+                icon: Trash2,
+                variant: "ghost",
+              },
+              {
+                title: "Archive",
+                label: "",
+                icon: Archive,
+                variant: "ghost",
+              },
+            ]}
           />
           <Separator />
           <Nav
@@ -189,13 +211,10 @@ export function Mail({
               </form>
             </div>
             <TabsContent value="all" className="m-0">
-              <EmailListColumn folderName={""} searchParams={{
-                q: undefined,
-                id: undefined
-              }} />
+              <MailList items={mails} />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-              <EmailListColumn folderName="" searchParams={{ q: undefined, id: undefined }} />
+              <MailList items={mails.filter((item) => !item.read)} />
             </TabsContent>
           </Tabs>
         </ResizablePanel>

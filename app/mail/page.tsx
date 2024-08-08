@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import Image from "next/image"
 
 import { Mail } from "@/components/mail/components/mail"
-import { getEmailFolders, getEmails } from "../actions"
+import { getEmails } from "../actions"
 import { Mail as MailType } from "@/types"
 import { accounts } from "@/components/mail/data"
 
@@ -14,7 +14,6 @@ export default async function MailPage() {
   const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined
 
   const mails = await getEmails()
-  const mailFolders = await getEmailFolders()
   return (
     <>
       <div className="md:hidden">
@@ -40,7 +39,6 @@ export default async function MailPage() {
           defaultLayout={defaultLayout}
           defaultCollapsed={defaultCollapsed}
           navCollapsedSize={4}
-          mailFolders={mailFolders}
         />
       </div>
     </>
