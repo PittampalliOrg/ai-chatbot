@@ -1,4 +1,6 @@
 {
+  "name": "nextapp",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -7,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.2.5",
     "@ai-sdk/openai": "^0.0.34",
     "@hookform/resolvers": "^3.3.4",
     "@microsoft/kiota-abstractions": "^1.0.0-preview.39",
@@ -51,14 +56,11 @@
     "jotai": "^2.9.1",
     "lucide-react": "^0.419.0",
     "nanoid": "^5.0.7",
-    "next": "latest",
     "next-auth": "5.0.0-beta.4",
     "next-themes": "^0.3.0",
     "openai": "^4.54.0",
-    "react": "^18.3.1",
     "react-aria-components": "1.1.1",
     "react-day-picker": "8.10.1",
-    "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.2",
     "react-intersection-observer": "^9.13.0",
     "react-markdown": "^8.0.7",
