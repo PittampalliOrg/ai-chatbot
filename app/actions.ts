@@ -4,19 +4,21 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { kv } from '@vercel/kv'
 
-import { auth } from '@/auth'
+import { auth, EnrichedSession } from '@/auth'
 import { type Chat } from '@/lib/types'
-import { TodoTask, TodoTaskList } from '@microsoft/microsoft-graph-types'
-import getGraphClient from './db'
+import { TodoTask, TodoTaskList, Message, MailFolder } from '@microsoft/microsoft-graph-types'
+import  getGraphClient from '@/app/db'
+import { OptimisticTask, Mail } from '@/types'
+import { removeSpacesFromFolderName } from './messages/db/utils'
 
 export async function getChats(userId?: string | null) {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession;
 
   if (!userId) {
     return []
   }
 
-  if (userId !== session?.user?.id) {
+  if (userId !== session.userId) {
     return {
       error: 'Unauthorized'
     }
@@ -41,9 +43,9 @@ export async function getChats(userId?: string | null) {
 }
 
 export async function getChat(id: string, userId: string) {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession;
 
-  if (userId !== session?.user?.id) {
+  if (userId !== session.userId) {
     return {
       error: 'Unauthorized'
     }
@@ -59,7 +61,7 @@ export async function getChat(id: string, userId: string) {
 }
 
 export async function removeChat({ id, path }: { id: string; path: string }) {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession;
 
   if (!session) {
     return {
@@ -67,32 +69,32 @@ export async function removeChat({ id, path }: { id: string; path: string }) {
     }
   }
 
-  // Convert uid to string for consistent comparison with session.user.id
+  // Convert uid to string for consistent comparison with session.userId
   const uid = String(await kv.hget(`chat:${id}`, 'userId'))
 
-  if (uid !== session?.user?.id) {
+  if (uid !== session.userId) {
     return {
       error: 'Unauthorized'
     }
   }
 
   await kv.del(`chat:${id}`)
-  await kv.zrem(`user:chat:${session.user.id}`, `chat:${id}`)
+  await kv.zrem(`user:chat:${session.userId}`, `chat:${id}`)
 
   revalidatePath('/')
   return revalidatePath(path)
 }
 
 export async function clearChats() {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession;
 
-  if (!session?.user?.id) {
+  if (!session.userId) {
     return {
       error: 'Unauthorized'
     }
   }
 
-  const chats: string[] = await kv.zrange(`user:chat:${session.user.id}`, 0, -1)
+  const chats: string[] = await kv.zrange(`user:chat:${session.userId}`, 0, -1)
   if (!chats.length) {
     return redirect('/')
   }
@@ -100,7 +102,7 @@ export async function clearChats() {
 
   for (const chat of chats) {
     pipeline.del(chat)
-    pipeline.zrem(`user:chat:${session.user.id}`, chat)
+    pipeline.zrem(`user:chat:${session.userId}`, chat)
   }
 
   await pipeline.exec()
@@ -120,9 +122,9 @@ export async function getSharedChat(id: string) {
 }
 
 export async function shareChat(id: string) {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession;
 
-  if (!session?.user?.id) {
+  if (!session.userId) {
     return {
       error: 'Unauthorized'
     }
@@ -130,7 +132,7 @@ export async function shareChat(id: string) {
 
   const chat = await kv.hgetall<Chat>(`chat:${id}`)
 
-  if (!chat || chat.userId !== session.user.id) {
+  if (!chat || chat.userId !== session.userId) {
     return {
       error: 'Something went wrong'
     }
@@ -147,7 +149,7 @@ export async function shareChat(id: string) {
 }
 
 export async function saveChat(chat: Chat) {
-  const session = await auth()
+  const session = (await auth()) as EnrichedSession;
 
   if (session && session.user) {
     const pipeline = kv.pipeline()
@@ -173,14 +175,20 @@ export async function getMissingKeys() {
     .filter(key => key !== '')
 }
 
-export async function getTasks(listId: string) {
+export async function getTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", taskIds?: string[]): Promise<TodoTask[]> {
   const client = await getGraphClient();
-  const todoList = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="
+  
   const response = await client
     .api(`/me/todo/lists/${listId}/tasks`)
     .get();
+  
+  console.log(response);
 
-  const tasks: TodoTask[] = await response.value;
+  let tasks: TodoTask[] = response.value;
+
+  if (taskIds && taskIds.length > 0) {
+    tasks = tasks.filter(task => taskIds.includes(task.id as string));
+  }
 
   return tasks;
 }
@@ -191,33 +199,190 @@ export async function getLists() {
     .api(`/me/todo/lists`)
     .get();
 
+    console.log(response);
+
   const lists: TodoTaskList[] = await response.value;
 
   return lists;
 }
 
 
-export async function saveAction(formData: FormData) {
-  const todoList = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="
-  
+export async function addTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", tasks: string[]): Promise<TodoTask[]> {
   const client = await getGraphClient();
-  let text = formData.get('item') ?? '';
+  let addedTasks: TodoTask[] = [];
 
+  if (tasks.length < 2) {
+    const todoTask = { title: tasks[0] };
+    const singleTaskResponse = await client
+      .api(`/me/todo/lists/${listId}/tasks`)
+      .post(todoTask);
 
-  const todoTask = {title: text};
+    addedTasks.push({
+      id: singleTaskResponse.id,
+      title: singleTaskResponse.title,
+      status: singleTaskResponse.status,
+      createdDateTime: singleTaskResponse.createdDateTime,
+      lastModifiedDateTime: singleTaskResponse.lastModifiedDateTime,
+      importance: singleTaskResponse.importance,
+      isReminderOn: singleTaskResponse.isReminderOn,
+      hasAttachments: singleTaskResponse.hasAttachments,
+      categories: singleTaskResponse.categories,
+      body: {
+        content: singleTaskResponse.body.content,
+        contentType: singleTaskResponse.body.contentType,
+      },
+    });
+  } else {
+    const batchRequestBody = {
+      requests: tasks.map((task, index) => ({
+        id: index.toString(),
+        method: "POST",
+        url: `/me/todo/lists/${listId}/tasks`,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: { title: task }
+      }))
+    };
 
-  await client
-    .api(`/me/todo/lists/${todoList}/tasks`)
-    .post(todoTask);
+    const batchResponse = await client
+      .api('/$batch')
+      .post(batchRequestBody);
+
+    const responses = batchResponse.responses;
+    addedTasks = responses
+      .filter((res: any) => res.status === 201) // Only include successfully created tasks
+      .map((res: any) => ({
+        id: res.body.id,
+        title: res.body.title,
+        status: res.body.status,
+        createdDateTime: res.body.createdDateTime,
+        lastModifiedDateTime: res.body.lastModifiedDateTime,
+        importance: res.body.importance,
+        isReminderOn: res.body.isReminderOn,
+        hasAttachments: res.body.hasAttachments,
+        categories: res.body.categories,
+        body: {
+          content: res.body.body.content,
+          contentType: res.body.body.contentType,
+        },
+      }));
+  }
 
   revalidatePath('/');
+  console.log(addedTasks);
+  return addedTasks;
 }
 
-export async function deleteAction(listId: string, taskId: string) {
+
+export async function deleteTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", taskIds: string[]) {
+
   const client = await getGraphClient();
 
-  await client.api(`/me/todo/lists/${listId}/tasks/${taskId}`)
-    .delete();
+if (taskIds.length > 0) {
 
-    revalidatePath('/');
+  await client
+    .api(`/me/todo/lists/${listId}/tasks/${taskIds[0]}`)
+    .delete();
 }
+
+else {
+
+  const batchRequestBody = {
+    requests: taskIds.map((taskId, index) => ({
+      id: index.toString(),
+      method: "DELETE",
+      url: `/me/todo/lists/${listId}/tasks/${taskId}`,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }))
+  };
+
+  await client
+  .api('/$batch')
+  .post(batchRequestBody);
+}
+
+revalidatePath('/');
+}
+
+
+export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
+  const client = await getGraphClient();
+
+  const response = await client
+    .api('/me/messages')
+    .select('id,subject,bodyPreview,receivedDateTime,isRead,from')
+    .top(100)
+    .get();
+
+  console.log(response);
+
+  let emails: Mail[] = response.value.map((message: any) => ({
+    id: message.id,
+    name: message.from.emailAddress.name,
+    email: message.from.emailAddress.address,
+    subject: message.subject,
+    text: message.bodyPreview,
+    date: message.receivedDateTime,
+    read: message.isRead,
+    labels: [], // Labels would need additional logic or a different API call to retrieve
+  }));
+
+  if (emailIds && emailIds.length > 0) {
+    emails = emails.filter(email => emailIds.includes(email.id));
+  }
+
+  return emails;
+}
+
+
+// function to get email folders
+export async function getEmailFolders(): Promise<MailFolder[]> {
+  const client = await getGraphClient();
+
+  const response = await client
+    .api('/me/mailFolders')
+    .get();
+
+  console.log(response);
+
+  return response.value;
+}
+
+export async function getMessagesForFolder(folderName: string = "Inbox"): Promise<Mail[]>  {
+  const client = await getGraphClient();
+  const response = await client.api(`/me/mailFolders/${removeSpacesFromFolderName(folderName)}/messages`)
+    .select('subject,from,receivedDateTime,bodyPreview')
+    .top(50)
+    .get();
+  
+    let emails: Mail[] = response.value.map((message: any) => ({
+      id: message.id,
+      name: message.from.emailAddress.name,
+      email: message.from.emailAddress.address,
+      subject: message.subject,
+      text: message.bodyPreview,
+      date: message.receivedDateTime,
+      read: message.isRead,
+      labels: [], // Labels would need additional logic or a different API call to retrieve
+    }));
+  
+    return emails;
+}
+
+
+export async function getExcelEmbedUrl(){
+  return "https://pittampalli-my.sharepoint.com/:x:/p/vinod/EVX_ru95pHZAuRuHvf43wtYBB9NcIz0dm7yw2oVpR26OcA?e=Krk5dJ&action=embedview&wdAllowInteractivity=True&wdbipreview=True"
+}
+
+  // export async function deleteAction(listId: string, taskId: string) {
+  //   const client = await getGraphClient();
+  
+  //   await client.api(`/me/todo/lists/${listId}/tasks/${taskId}`)
+  //     .delete();
+  
+  //   revalidatePath('/');
+  // }
+  

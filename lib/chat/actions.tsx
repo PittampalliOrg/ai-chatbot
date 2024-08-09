@@ -14,32 +14,27 @@ import {
   spinner,
   BotCard,
   BotMessage,
-  SystemMessage,
-  Stock,
-  Purchase
+  SystemMessage
 } from '@/components/stocks'
 
 import { z } from 'zod'
-import { EventsSkeleton } from '@/components/stocks/events-skeleton'
-import { Events } from '@/components/stocks/events'
-import { StocksSkeleton } from '@/components/stocks/stocks-skeleton'
-import { Stocks } from '@/components/stocks/stocks'
-import { StockSkeleton } from '@/components/stocks/stock-skeleton'
 import {
   formatNumber,
   runAsyncFnWithoutBlocking,
   sleep,
   nanoid
 } from '@/lib/utils'
-import { getTasks, saveChat } from '@/app/actions'
+import { addTasks, deleteTasks, getEmails, getTasks, saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
-import { auth } from '@/auth'
+import { auth, EnrichedSession } from '@/auth'
 import WeatherCard from '@/components/weather/weather'
 import { TodoList } from '@/components/tasks/tasks'
-import Files from '@/components/files'
 import Search from '@/components/search'
-import { OptimisticTask } from '@/types'
+import { Mail as MailType, OptimisticTask } from '@/types'
+import { Mail } from '@/app/mail/components/mail'
+import { accounts } from '@/app/mail/data'
+import { TaskComboboxForm } from '@/components/tasks/tasks-combobox-form'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -133,64 +128,77 @@ async function submitUserMessage(content: string) {
   const result = await streamUI({
     model: openai('gpt-4o'),
     initial: <SpinnerMessage />,
-    system: "You are an AI assistant capable of helping with the user's personal tasks.  You are able to call three functions"
-    
-//     `\
-// You are an AI assistant capable of helping with three activities:
+    system: `You are an intelligent assistant designed to help users manage their Microsoft ToDo tasks efficiently. You will interact with the Microsoft Graph API to perform various task management operations. Your primary functions include:
 
-// 1. Search - searching files and file content within Microsoft Graph. When a user specifies a search query for files or file content, you will construct the request body for the search_files function and provide the applicable parameters based on the user's intent.  All function calls MUST be in JSON.
-// 2. Tasks - displaying user's tasks
-// 3. Weather Providing the weather
+Get Task Lists: Retrieve and display the user's task lists.
+Get Tasks: Retrieve and display tasks from a specific task list.
+Add Tasks: Add new tasks.
+Delete Tasks: Remove tasks from a specified task list.
+Show Email: Retrieve and display the user's email address.
+When interacting with users, ensure to:
 
+Confirm the action they want to perform.
+Request necessary details (e.g., task list name, task details).
+Provide clear feedback on the success or failure of each operation.
+Handle errors gracefully and provide helpful troubleshooting information.
+Your responses should be clear, concise, and focused on task management. Always prioritize the user's productivity and efficiency.`
 
-// Search -- Use the following instructions to determine the parameters:
+    //     `\
+    // You are an AI assistant capable of helping with three activities:
 
-// 1. **Query String**: You will use your world knowledge and knowledge of Microsoft graph search syntax (including KQL, XRANK, etc.) to create a query string that reflects the semantics of what the user is looking for.
-// 2. **Entity Types**: Always set this to ["driveItem"] to search for files and file content.
-// 3. **Starting Index (from)**: If specified by the user, include it; otherwise, default to 0.
-// 4. **Number of Results (size)**: If specified by the user, include it; otherwise, default to a reasonable number like 10.
-// 5. **Stored Fields**: If the user requests specific fields to be included in the response, add them.
-// 6. **Sort Order**: If the user specifies a sort order, include it with the appropriate field and order.
-
-// #### Examples:
-
-// - **User Intent**: "Search for documents containing the word 'budget' sorted by date."
-//   - **Request Body**:
-  
-//     {
-//       "requests": [
-//         {
-//           "entityTypes": ["driveItem"],
-//           "query": {
-//             "queryString": "budget"
-//           },
-//           "sort": [
-//             {
-//               "field": "createdDateTime",
-//               "sortOrder": "desc"
-//             }
-//           ]
-//         }
-//       ]
-//     }
+    // 1. Search - searching files and file content within Microsoft Graph. When a user specifies a search query for files or file content, you will construct the request body for the search_files function and provide the applicable parameters based on the user's intent.  All function calls MUST be in JSON.
+    // 2. Tasks - displaying user's tasks
+    // 3. Weather Providing the weather
 
 
-//  **User Intent**: "Find all files related to 'project plan' and show the first 5 results."
-//    **Request Body**:
-//     {
-//       "requests": [
-//         {
-//           "entityTypes": ["driveItem"],
-//           "query": {
-//             "queryString": "project plan"
-//           },
-//           "size": 5
-//         }
-//       ]
-//     }
+    // Search -- Use the following instructions to determine the parameters:
 
-// Construct the request body based on these guidelines and call the search_files function with the appropriate parameters.  For any relative dates/times, assume the current date/time is ${new Date().toISOString().slice(0, 10)}
-//     `
+    // 1. **Query String**: You will use your world knowledge and knowledge of Microsoft graph search syntax (including KQL, XRANK, etc.) to create a query string that reflects the semantics of what the user is looking for.
+    // 2. **Entity Types**: Always set this to ["driveItem"] to search for files and file content.
+    // 3. **Starting Index (from)**: If specified by the user, include it; otherwise, default to 0.
+    // 4. **Number of Results (size)**: If specified by the user, include it; otherwise, default to a reasonable number like 10.
+    // 5. **Stored Fields**: If the user requests specific fields to be included in the response, add them.
+    // 6. **Sort Order**: If the user specifies a sort order, include it with the appropriate field and order.
+
+    // #### Examples:
+
+    // - **User Intent**: "Search for documents containing the word 'budget' sorted by date."
+    //   - **Request Body**:
+
+    //     {
+    //       "requests": [
+    //         {
+    //           "entityTypes": ["driveItem"],
+    //           "query": {
+    //             "queryString": "budget"
+    //           },
+    //           "sort": [
+    //             {
+    //               "field": "createdDateTime",
+    //               "sortOrder": "desc"
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     }
+
+
+    //  **User Intent**: "Find all files related to 'project plan' and show the first 5 results."
+    //    **Request Body**:
+    //     {
+    //       "requests": [
+    //         {
+    //           "entityTypes": ["driveItem"],
+    //           "query": {
+    //             "queryString": "project plan"
+    //           },
+    //           "size": 5
+    //         }
+    //       ]
+    //     }
+
+    // Construct the request body based on these guidelines and call the search_files function with the appropriate parameters.  For any relative dates/times, assume the current date/time is ${new Date().toISOString().slice(0, 10)}
+    //     `
     ,
     messages: [
       ...aiState.get().messages.map((message: any) => ({
@@ -314,19 +322,19 @@ async function submitUserMessage(content: string) {
 
           return (
             <BotCard>
-              <TodoList tasks={items} />
+              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=" />
             </BotCard>
           );;
         },
       },
-      search_query: {
-        description: 'Execute a search query on the Microsoft Graph API to find files based on user-defined criteria.',
+      addTasks: {
+        description: 'Add new tasks',
         parameters: z.object({
-          query: z.string().describe('the query string to search for.'),
+          titles: z.array(z.string()).describe('The titles of the tasks.')
         }),
-        generate: async function* ({ query }) {
+        generate: async function* ({ titles }) {
           const toolCallId = nanoid();
-      
+
           aiState.done({
             ...aiState.get(),
             messages: [
@@ -337,9 +345,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-call',
-                    toolName: 'search_query',
+                    toolName: 'addTasks',
                     toolCallId,
-                    args: { query },
+                    args: { titles },
                   },
                 ],
               },
@@ -349,22 +357,169 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-result',
-                    toolName: 'search_query',
+                    toolName: 'addTasks',
                     toolCallId,
-                    result: { query },
+                    result: {},
                   },
                 ],
               },
             ],
           });
-          console.log(query);
+          console.log(titles);
+          let addTaskResponse = await addTasks("AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", titles);
+
           return (
             <BotCard>
-              <Search searchQuery={query} />
+              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=" initialTasks={addTaskResponse} />
             </BotCard>
-          )
-        }
-      },  
+          );
+        },
+      },
+
+      deleteTasks: {
+        description: 'Delete tasks from a specified task list.',
+        parameters: z.object({
+          listId: z.string().describe('The ID of the task list containing the tasks to delete.'),
+          taskIds: z.array(z.string()).describe('The IDs of the tasks to delete.')
+        }),
+        generate: async function* ({ listId, taskIds }) {
+          const toolCallId = nanoid();
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'deleteTasks',
+                    toolCallId,
+                    args: { listId, taskIds },
+                  },
+                ],
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'deleteTasks',
+                    toolCallId,
+                    result: {},
+                  },
+                ],
+              },
+            ],
+          });
+
+          const deletedTasks = await deleteTasks(listId, taskIds);
+
+          return (
+            <BotCard>
+              <p>Tasks</p>
+            </BotCard>
+          );
+        },
+      },
+      showEmails: {
+        description: 'Display the user emails.',
+        parameters: z.object({
+          count: z.number().default(100).describe('The number of emails to display.')
+        }),
+        generate: async function* ({ count }) {
+          const toolCallId = nanoid();
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'showEmails',
+                    toolCallId,
+                    args: {},
+                  },
+                ],
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'showEmails',
+                    toolCallId,
+                    result: {},
+                  },
+                ],
+              },
+            ],
+          });
+
+          const items: MailType[] = await getEmails();
+
+          return (
+            <BotCard>
+              <Mail mails={items} accounts={accounts} />
+            </BotCard>
+          );;
+        },
+      },
+
+      // search_query: {
+      //   description: 'Execute a search query on the Microsoft Graph API to find files based on user-defined criteria.',
+      //   parameters: z.object({
+      //     query: z.string().describe('the query string to search for.'),
+      //   }),
+      //   generate: async function* ({ query }) {
+      //     const toolCallId = nanoid();
+
+      //     aiState.done({
+      //       ...aiState.get(),
+      //       messages: [
+      //         ...aiState.get().messages,
+      //         {
+      //           id: nanoid(),
+      //           role: 'assistant',
+      //           content: [
+      //             {
+      //               type: 'tool-call',
+      //               toolName: 'search_query',
+      //               toolCallId,
+      //               args: { query },
+      //             },
+      //           ],
+      //         },
+      //         {
+      //           id: nanoid(),
+      //           role: 'tool',
+      //           content: [
+      //             {
+      //               type: 'tool-result',
+      //               toolName: 'search_query',
+      //               toolCallId,
+      //               result: { query },
+      //             },
+      //           ],
+      //         },
+      //       ],
+      //     });
+      //     console.log(query);
+      //     return (
+      //       <BotCard>
+      //         <Search searchQuery={query} />
+      //       </BotCard>
+      //     )
+      //   }
+      // },
     }
   })
 
@@ -410,13 +565,13 @@ export const AI = createAI<AIState, UIState>({
   onSetAIState: async ({ state }) => {
     'use server'
 
-    const session = await auth()
+    const session = (await auth()) as EnrichedSession;
 
     if (session && session.user) {
       const { chatId, messages } = state
 
       const createdAt = new Date()
-      const userId = session.user.id as string
+      const userId = session.userId
       const path = `/chat/${chatId}`
 
       const firstMessageContent = messages[0].content as string
@@ -446,20 +601,30 @@ export const getUIStateFromAIState = (aiState: Chat) => {
       display:
         message.role === 'tool' ? (
           message.content.map(tool => {
-            return tool.toolName === 'getWeather' ? (
+            return tool.toolName === 'showTasks' ? (
               <BotCard>
                 {/* @ts-expect-error */}
-                <WeatherCard props={tool.result} />
+                <TaskComboboxForm props={tool.result} />
               </BotCard>
-            ) : tool.toolName === 'showTasks' ? (
+            ) : tool.toolName === 'addTasks' ? (
               <BotCard>
                 {/* @ts-expect-error */}
-                <TodoList props={tool.result} />
+                <TaskComboboxForm props={tool.result} />
+              </BotCard>
+            ) : tool.toolName === 'deleteTasks' ? (
+              <BotCard>
+                {/* @ts-expect-error */}
+                <TaskComboboxForm props={tool.result} />
               </BotCard>
             ) : tool.toolName === 'search_query' ? (
               <BotCard>
                 {/* @ts-expect-error */}
                 <Search props={tool.result} />
+              </BotCard>
+            ) : tool.toolName === 'showEmails' ? (
+              <BotCard>
+                {/* @ts-expect-error */}
+                <Mail props={tool.result} />
               </BotCard>
             ) : null
           })

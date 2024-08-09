@@ -1,10 +1,9 @@
-import { auth } from '@/auth'
+import { auth, EnrichedSession } from '@/auth'
 import LoginForm from '@/components/login-form'
-import { Session } from '@/lib/types'
 import { redirect } from 'next/navigation'
 
 export default async function LoginPage() {
-  const session = (await auth()) as Session
+  const session = (await auth()) as EnrichedSession
 
   if (session) {
     redirect('/')

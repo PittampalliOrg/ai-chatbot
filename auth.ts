@@ -50,6 +50,7 @@ export const config = {
           issued_at: Date.now(),
           expires_at: Date.now() + Number(account.expires_in) * 1000, // 3600 seconds
           refresh_token: account.refresh_token,
+          sub: user.id, 
         };
       } else if (Date.now() < Number(token.expires_at)) {
         return token;
@@ -108,6 +109,7 @@ export const config = {
         refreshToken: String(token.refresh_token),
         accessTokenIssuedAt: Number(token.issued_at),
         accessTokenExpiresAt: Number(token.expires_at),
+        userId: String(token.sub),
       } satisfies EnrichedSession;
     },
   },
@@ -118,6 +120,7 @@ export interface EnrichedSession extends Session {
   refreshToken: string;
   accessTokenExpiresAt: number;
   accessTokenIssuedAt: number;
+  userId: string;
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth(config);
