@@ -1,41 +1,29 @@
-import { cookies } from "next/headers"
-import Image from "next/image"
+import { Suspense } from "react"
+import { MailList } from "@/app/mail/components/mail-list"
+import { MailDisplay } from "@/app/mail/components/mail-display"
+import { getEmailsForFolder } from "@/app/messages/db/queries"
+import { Message } from "@microsoft/microsoft-graph-types"
 
-import { Mail } from "@/app/mail/components/mail"
+interface MailListPageProps {
+  params: { name: string }
+  searchParams: { q?: string; id?: string }
+}
 
-export default async function Page({ params }: { params: { name: string } }) {
-  const layout = cookies().get("react-resizable-panels:layout:mail")
-  const collapsed = cookies().get("react-resizable-panels:collapsed")
-
-  const defaultLayout = layout ? JSON.parse(layout.value) : undefined
-  const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined
+export default async function MailListPage({ params, searchParams }: MailListPageProps) {
+  const emails: Message[] = await getEmailsForFolder(params.name)
 
   return (
-    <>
-      <div className="md:hidden">
-        <Image
-          src="/examples/mail-dark.png"
-          width={1280}
-          height={727}
-          alt="Mail"
-          className="hidden dark:block"
-        />
-        <Image
-          src="/examples/mail-light.png"
-          width={1280}
-          height={727}
-          alt="Mail"
-          className="block dark:hidden"
-        />
+    <div className="flex h-full">
+      <div className="w-1/2 overflow-hidden">
+        <Suspense fallback={<div className="p-8 text-center">Loading emails...</div>}>
+          <MailList emails={emails} params={params} searchParams={searchParams} />
+        </Suspense>
       </div>
-      <div className="hidden flex-col md:flex">
-      <Mail
-          defaultLayout={defaultLayout}
-          defaultCollapsed={defaultCollapsed}
-          navCollapsedSize={4}
-          params={params}
-        />
+      <div className="w-1/2 overflow-hidden">
+        <Suspense fallback={<div className="p-8 text-center">Loading email content...</div>}>
+          {searchParams.id && <MailDisplay emailId={searchParams.id} />}
+        </Suspense>
       </div>
-    </>
+    </div>
   )
 }

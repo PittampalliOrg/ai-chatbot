@@ -9,7 +9,7 @@ export async function EmailListColumn({
   folderName: string;
   searchParams: { q?: string; id?: string };
 }) {
-  const emails = await getEmailsForFolder(folderName, searchParams.q);
+  const emails = await getEmailsForFolder(folderName);
 
   function createUrl(id: string) {
     const baseUrl = `/f/${removeSpacesFromFolderName(folderName)}`;
@@ -20,7 +20,7 @@ export async function EmailListColumn({
 
   return (
     <div className="border-r border-gray-200 dark:border-gray-800 overflow-y-auto p-2 col-span-2">
-      <ul className="divide-y divide-gray-200 dark:divide-gray-800">
+      {/* <ul className="divide-y divide-gray-200 dark:divide-gray-800">
         {emails.map((email) => (
           <Link key={email.id} href={createUrl(email.id)}>
             <li className="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex justify-between items-start rounded-lg">
@@ -45,7 +45,7 @@ export async function EmailListColumn({
             </li>
           </Link>
         ))}
-      </ul>
+      </ul> */}
     </div>
   );
 }

@@ -1,35 +1,29 @@
 import { ComponentProps } from "react"
-import { formatDistanceToNow } from "date-fns"
-
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { Badge } from "../../../components/ui/badge"
-import { ScrollArea } from "../../../components/ui/scroll-area"
-import { Separator } from "../../../components/ui/separator"
 import { Message } from "@microsoft/microsoft-graph-types"
-import { getEmailsForFolder } from "@/app/messages/db/queries"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { formatDistanceToNow } from "date-fns"
+import Link from "next/link"
 
+interface MailListProps {
+  emails: Message[]
+  params: { name: string }
+  searchParams: { q?: string; id?: string }
+}
 
-
-export async function MailList() {
-  // const [mail, setMail] = useMail()
-  const items: Message[] = await getEmailsForFolder("inbox")
-
+export function MailList({ emails, params, searchParams }: MailListProps) {
   return (
     <ScrollArea className="h-screen">
       <div className="flex flex-col gap-2 p-4 pt-0">
-        {items.map((item) => (
-          <button
-            // key={item.id}
-            // className={cn(
-            //   "flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
-            //   mail.selected === item.id && "bg-muted"
-            // )}
-            // onClick={() =>
-            //   setMail({
-            //     ...mail,
-            //     selected: item.id ?? null,
-            //   })
-            // }
+        {emails.map((item) => (
+          <Link
+            key={item.id}
+            href={`/mail/${params.name}?id=${item.id}`}
+            className={cn(
+              "flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
+              searchParams.id === item.id && "bg-muted"
+            )}
           >
             <div className="flex w-full flex-col gap-1">
               <div className="flex items-center">
@@ -39,17 +33,10 @@ export async function MailList() {
                     <span className="flex h-2 w-2 rounded-full bg-blue-600" />
                   )}
                 </div>
-                <div
-                  // className={cn(
-                  //   "ml-auto text-xs",
-                  //   mail.selected === item.id
-                  //     ? "text-foreground"
-                  //     : "text-muted-foreground"
-                  // )}
-                >
-                  {/* {formatDistanceToNow(new Date(item.sentDateTime?.toString() ?? ""), {
+                <div className="ml-auto text-xs text-muted-foreground">
+                  {item.sentDateTime && formatDistanceToNow(new Date(item.sentDateTime), {
                     addSuffix: true,
-                  })} */}
+                  })}
                 </div>
               </div>
               <div className="text-xs font-medium">{item.subject}</div>
@@ -66,7 +53,7 @@ export async function MailList() {
                 ))}
               </div>
             ) : null}
-          </button>
+          </Link>
         ))}
       </div>
     </ScrollArea>

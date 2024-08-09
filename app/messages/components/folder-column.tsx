@@ -1,13 +1,8 @@
 import Link from 'next/link';
 import { getFoldersWithEmailCount } from '@/app/messages/db/queries';
-import { FlagIcon } from '@/app/messages/icons/flag';
-import { FolderIcon } from '@/app/messages/icons/folder';
-import { InboxIcon } from '@/app/messages/icons/inbox';
-import { SentIcon } from '@/app/messages/icons/sent';
 import { removeSpacesFromFolderName } from '@/app/messages/db/utils';
 import { Folder } from '@/app/messages/db/queries';
 
-import { LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "../../../components/ui/button"
@@ -16,20 +11,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../../components/ui/tooltip"
-import {
-  AlertCircle,
-  Archive,
-  ArchiveX,
-  File,
-  Inbox,
-  MessagesSquare,
-  Search,
-  Send,
-  ShoppingCart,
-  Trash2,
-  Users2,
-  Flag,
-} from "lucide-react"
 
 
 
