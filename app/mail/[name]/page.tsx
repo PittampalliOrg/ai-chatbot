@@ -21,13 +21,7 @@ export default async function MailListPage({ params, searchParams }: MailListPag
       </div>
       <div className="w-2/3 h-full overflow-hidden">
         <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Loading email content...</div>}>
-          {searchParams.id ? (
-            <MailDisplay emailId={searchParams.id} />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Select an email to view
-            </div>
-          )}
+          <MailDisplay emailId={searchParams.id ?? null} />
         </Suspense>
       </div>
     </div>

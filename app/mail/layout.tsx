@@ -8,6 +8,9 @@ import { getEmailFolders } from "./actions"
 import { ClientWrapper, LeftPanel, ResizablePanel, ResizableHandle } from "./components/client-wrapper"
 import { cn } from "@/lib/utils"
 import { AccountSwitcherServer } from "./components/account-switcher-server"
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import { Pen } from 'lucide-react';
 
 export default async function MailLayout({ children, params }: { children: React.ReactNode; params: { name: string } }) {
   const defaultLayout = [265, 655]
@@ -35,6 +38,14 @@ export default async function MailLayout({ children, params }: { children: React
               isCollapsed={defaultCollapsed}
               currentFolder={params.name}
             />
+            <div className="mt-auto p-4">
+              <Link href="/mail/new">
+                <Button className="w-full flex items-center justify-center">
+                  <Pen className="mr-2 h-4 w-4" />
+                  Compose
+                </Button>
+              </Link>
+            </div>
           </LeftPanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>

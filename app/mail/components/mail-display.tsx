@@ -10,37 +10,59 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Message } from "@microsoft/microsoft-graph-types"
 import { getEmailById } from "@/app/messages/db/queries"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ComposeEmail } from "./compose-email";
+import { deleteEmail, flagEmail } from '@/app/mail/actions';
+import { Flag } from 'lucide-react';
 
 interface MailDisplayProps {
-  emailId: string
+  emailId: string | null;
 }
 
 export async function MailDisplay({ emailId }: MailDisplayProps) {
-  const email: Message | null = await getEmailById(emailId)
+  if (!emailId || emailId === 'new') {
+    return <ComposeEmail />;
+  }
+
+  const email = await getEmailById(emailId);
 
   if (!email) {
-    return <div className="flex items-center justify-center h-full text-muted-foreground">No message selected</div>
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        Email not found
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between p-2 border-b">
-        <ActionButtons />
+        <ActionButtons emailId={emailId} email={email} />
         <MoreOptions />
       </div>
       <ScrollArea className="flex-grow">
         <EmailContent email={email} />
       </ScrollArea>
     </div>
-  )
+  );
 }
 
-function ActionButtons() {
+function ActionButtons({ emailId, email }: { emailId: string; email: Message }) {
   return (
     <div className="flex items-center space-x-2">
+      <form action={flagEmail.bind(null, emailId, !(email.flag?.flagStatus === 'flagged'))}>
+        <ActionButton 
+          icon={<Flag className={`h-4 w-4 ${email.flag?.flagStatus === 'flagged' ? 'fill-yellow-500' : ''}`} />} 
+          label={email.flag?.flagStatus === 'flagged' ? "Unflag" : "Flag"} 
+        />
+      </form>
       <ActionButton icon={<Archive className="h-4 w-4" />} label="Archive" />
       <ActionButton icon={<ArchiveX className="h-4 w-4" />} label="Move to junk" />
-      <ActionButton icon={<Trash2 className="h-4 w-4" />} label="Move to trash" />
+      <form action={deleteEmail.bind(null, emailId)}>
+        <ActionButton 
+          icon={<Trash2 className="h-4 w-4" />} 
+          label="Delete" 
+        />
+      </form>
       <ActionButton icon={<Clock className="h-4 w-4" />} label="Snooze" />
     </div>
   )
@@ -50,7 +72,7 @@ function ActionButton({ icon, label }: { icon: React.ReactNode; label: string })
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" type="submit">
           {icon}
           <span className="sr-only">{label}</span>
         </Button>

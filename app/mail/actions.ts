@@ -7,6 +7,7 @@ import { Mail } from '@/types'
 import { removeSpacesFromFolderName } from './utils'
 import { Message } from '@microsoft/microsoft-graph-types'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation';
 
 export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
     const client = await getGraphClient();
@@ -94,3 +95,63 @@ export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
     };
     
   }
+
+export async function deleteEmail(emailId: string) {
+  const client = await getGraphClient();
+
+  try {
+    await client.api(`/me/messages/${emailId}`).delete();
+    revalidatePath('/mail/[name]');
+    redirect('/mail/inbox');
+  } catch (error) {
+    console.error('Error deleting email:', error);
+    return { success: false, error };
+  }
+}
+
+export async function flagEmail(emailId: string, isFlagged: boolean) {
+  const client = await getGraphClient();
+
+  try {
+    await client.api(`/me/messages/${emailId}`).update({
+      flag: {
+        flagStatus: isFlagged ? 'flagged' : 'notFlagged'
+      }
+    });
+    revalidatePath('/mail/[name]');
+  } catch (error) {
+    console.error('Error flagging email:', error);
+    return { success: false, error };
+  }
+}
+
+export async function sendEmail(formData: FormData) {
+  const client = await getGraphClient();
+
+  const emailData = {
+    message: {
+      subject: formData.get('subject'),
+      body: {
+        contentType: "Text",
+        content: formData.get('body')
+      },
+      toRecipients: [
+        {
+          emailAddress: {
+            address: formData.get('to')
+          }
+        }
+      ]
+    },
+    saveToSentItems: "true"
+  };
+
+  try {
+    await client.api('/me/sendMail').post(emailData);
+    revalidatePath('/mail/[name]');
+    redirect('/mail/inbox');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, error };
+  }
+}
