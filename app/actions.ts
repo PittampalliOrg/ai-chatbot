@@ -175,24 +175,17 @@ export async function getMissingKeys() {
     .filter(key => key !== '')
 }
 
-export async function getTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", taskIds?: string[]): Promise<TodoTask[]> {
-  const client = await getGraphClient();
+  export async function getTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA="): Promise<TodoTask[]> {
+    const client = await getGraphClient();
+    
+    const response = await client
+      .api(`/me/todo/lists/${listId}/tasks`)
+      .get();
   
-  const response = await client
-    .api(`/me/todo/lists/${listId}/tasks`)
-    .get();
-  
-  console.log(response);
-
-  let tasks: TodoTask[] = response.value;
-
-  if (taskIds && taskIds.length > 0) {
-    tasks = tasks.filter(task => taskIds.includes(task.id as string));
+    return response.value;
   }
 
-  return tasks;
-}
-
+  
 export async function getLists() {
   const client = await getGraphClient();
   const response = await client

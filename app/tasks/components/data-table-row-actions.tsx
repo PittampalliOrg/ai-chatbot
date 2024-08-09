@@ -1,7 +1,6 @@
-"use client"
-
 import { DotsHorizontalIcon } from "@radix-ui/react-icons"
 import { Row } from "@tanstack/react-table"
+import { TodoTask } from "@microsoft/microsoft-graph-types"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,17 +17,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { labels } from "../data/data"
-import { taskSchema } from "../data/schema"
-
-interface DataTableRowActionsProps<TData> {
-  row: Row<TData>
+interface DataTableRowActionsProps {
+  row: Row<TodoTask>
 }
 
-export function DataTableRowActions<TData>({
+export function DataTableRowActions({
   row,
-}: DataTableRowActionsProps<TData>) {
-  const task = taskSchema.parse(row.original)
+}: DataTableRowActionsProps) {
+  const task = row.original
 
   return (
     <DropdownMenu>
@@ -47,14 +43,12 @@ export function DataTableRowActions<TData>({
         <DropdownMenuItem>Favorite</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={task.label}>
-              {labels.map((label) => (
-                <DropdownMenuRadioItem key={label.value} value={label.value}>
-                  {label.label}
-                </DropdownMenuRadioItem>
-              ))}
+            <DropdownMenuRadioGroup value={task.status}>
+              <DropdownMenuRadioItem value="notStarted">Not started</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="inProgress">In progress</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="completed">Completed</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
