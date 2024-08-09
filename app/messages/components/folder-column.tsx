@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getFoldersWithEmailCount } from '@/app/messages/db/queries';
-import { removeSpacesFromFolderName } from '@/app/messages/db/utils';
+import { removeSpacesFromFolderName } from '@/app/mail/utils';
 import { Folder } from '@/app/messages/db/queries';
 
 

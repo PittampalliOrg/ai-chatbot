@@ -1,25 +1,25 @@
 "use client"
 
-import React, { useState } from 'react'
+import React from 'react'
 import { AccountSwitcher } from './account-switcher'
+import { cn } from '@/lib/utils';
 
 interface AccountSwitcherWrapperProps {
-  accounts: {
-    label: string
-    email: string
-    icon: string
-  }[]
+  currentAccount: {
+    label: string;
+    email: string;
+    image: string;
+  };
+  isCollapsed: boolean;
 }
 
-export function AccountSwitcherWrapper({ accounts }: AccountSwitcherWrapperProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
+export function AccountSwitcherWrapper({ currentAccount, isCollapsed }: AccountSwitcherWrapperProps) {
   return (
-    <div>
-      <button onClick={() => setIsCollapsed(!isCollapsed)} className="mb-2 p-2 text-sm">
-        {isCollapsed ? 'Expand' : 'Collapse'}
-      </button>
-      <AccountSwitcher isCollapsed={isCollapsed} accounts={accounts} />
+    <div className={cn(
+      "flex items-center justify-center",
+      isCollapsed ? "h-9 w-9" : "p-2"
+    )}>
+      <AccountSwitcher currentAccount={currentAccount} isCollapsed={isCollapsed} />
     </div>
   )
 }

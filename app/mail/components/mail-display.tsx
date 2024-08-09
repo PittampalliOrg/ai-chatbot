@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Message } from "@microsoft/microsoft-graph-types"
 import { getEmailById } from "@/app/messages/db/queries"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface MailDisplayProps {
   emailId: string
@@ -22,12 +23,14 @@ export async function MailDisplay({ emailId }: MailDisplayProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
       <div className="flex items-center justify-between p-2 border-b">
         <ActionButtons />
         <MoreOptions />
       </div>
-      <EmailContent email={email} />
+      <ScrollArea className="flex-grow">
+        <EmailContent email={email} />
+      </ScrollArea>
     </div>
   )
 }

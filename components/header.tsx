@@ -14,6 +14,7 @@ import { UserMenu } from '@/components/user-menu'
 import { SidebarMobile } from './sidebar-mobile'
 import { SidebarToggle } from './sidebar-toggle'
 import { ChatHistory } from './chat-history'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 async function UserOrLogin() {
   const session = (await auth()) as EnrichedSession
@@ -73,6 +74,7 @@ export function Header() {
           <span className="hidden sm:block">Deploy to Vercel</span>
           <span className="sm:hidden">Deploy</span>
         </a>
+        <ThemeToggle />
       </div>
     </header>
   )

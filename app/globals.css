@@ -74,3 +74,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .h-screen-dvh {
+    height: 100dvh;
+  }
+  .prevent-shift {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+}
+
+html, body {
+  height: 100%;
+}

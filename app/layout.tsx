@@ -37,10 +37,10 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full">
       <body
         className={cn(
-          'font-sans antialiased',
+          'font-sans antialiased h-full',
           GeistSans.variable,
           GeistMono.variable
         )}
@@ -52,9 +52,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col h-full">
             <Header />
-            <main className="flex flex-col flex-1 bg-muted/50">{children}</main>
+            <main className="flex-1 overflow-hidden">{children}</main>
           </div>
           <TailwindIndicator />
         </Providers>

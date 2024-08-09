@@ -1,62 +1,83 @@
 "use client"
 
 import * as React from "react"
+import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons"
+
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface AccountSwitcherProps {
-  isCollapsed: boolean
-  accounts: {
-    label: string
-    email: string
-    icon: string
-  }[]
+  currentAccount: {
+    label: string;
+    email: string;
+    image: string;
+  };
+  isCollapsed: boolean;
 }
 
-export function AccountSwitcher({
-  isCollapsed,
-  accounts,
-}: AccountSwitcherProps) {
-  const [selectedAccount, setSelectedAccount] = React.useState<string>(
-    accounts[0]?.email || ""
-  )
+export function AccountSwitcher({ currentAccount, isCollapsed }: AccountSwitcherProps) {
+  const [open, setOpen] = React.useState(false)
 
   return (
-    <Select defaultValue={selectedAccount} onValueChange={setSelectedAccount}>
-      <SelectTrigger
-        className={cn(
-          "flex items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
-          isCollapsed &&
-          "flex h-9 w-9 shrink-0 items-center justify-center p-0 [&>span]:w-auto [&>svg]:hidden"
-        )}
-        aria-label="Select account"
-      >
-        <SelectValue placeholder="Select an account">
-          {accounts.find((account) => account.email === selectedAccount)?.icon}
-          <span className={cn("ml-2", isCollapsed && "hidden")}>
-            {
-              accounts.find((account) => account.email === selectedAccount)
-                ?.label
-            }
-          </span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {accounts.map((account) => (
-          <SelectItem key={account.email} value={account.email}>
-            <div className="flex items-center gap-3 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0 [&_svg]:text-foreground">
-              {account.icon}
-              {account.email}
-            </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          role="combobox"
+          aria-expanded={open}
+          aria-label="Select account"
+          className={cn(
+            "w-full justify-between",
+            isCollapsed ? "h-9 w-9 p-0" : "px-2"
+          )}
+        >
+          <Avatar className={cn("h-5 w-5", isCollapsed ? "mr-0" : "mr-2")}>
+            <AvatarImage src={currentAccount.image} alt={currentAccount.label} />
+            <AvatarFallback>{currentAccount.label[0]}</AvatarFallback>
+          </Avatar>
+          {!isCollapsed && (
+            <span className="truncate">{currentAccount.email}</span>
+          )}
+          {!isCollapsed && (
+            <CaretSortIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0">
+        <Command>
+          <CommandList>
+            <CommandInput placeholder="Search account..." />
+            <CommandEmpty>No account found.</CommandEmpty>
+            <CommandGroup heading="Current Account">
+              <CommandItem
+                onSelect={() => setOpen(false)}
+                className="text-sm"
+              >
+                <Avatar className="h-5 w-5 mr-2">
+                  <AvatarImage src={currentAccount.image} alt={currentAccount.label} />
+                  <AvatarFallback>{currentAccount.label[0]}</AvatarFallback>
+                </Avatar>
+                <span className="truncate">{currentAccount.email}</span>
+                <CheckIcon className="ml-auto h-4 w-4 opacity-100" />
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }

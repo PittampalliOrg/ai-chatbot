@@ -10,7 +10,7 @@ import {
   Popover,
 } from 'react-aria-components';
 import type { ListBoxItemProps } from 'react-aria-components';
-import { formatEmailString } from '@/app/messages/db/utils';
+import { formatEmailString } from '@/app/mail/utils';
 
 type UserEmail = {
   first_name: string;

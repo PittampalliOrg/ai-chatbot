@@ -17,7 +17,7 @@ export function ClientWrapper({ defaultLayout, defaultCollapsed, navCollapsedSiz
       onLayout={(sizes: number[]) => {
         document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`
       }}
-      className="h-full max-h-[800px] items-stretch"
+      className="h-full items-stretch"
     >
       {children}
     </ResizablePanelGroup>
@@ -38,7 +38,11 @@ export function LeftPanel({ defaultLayout, defaultCollapsed, navCollapsedSize, c
       onExpand={() => {
         document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(false)}`
       }}
-      className={cn(defaultCollapsed && "min-w-[50px] transition-all duration-300 ease-in-out")}
+      className={cn(
+        "bg-background text-sm font-normal", // Add font styles
+        "overflow-y-auto", // Ensure consistent scrollbar behavior
+        defaultCollapsed && "min-w-[50px] transition-all duration-300 ease-in-out"
+      )}
     >
       {children}
     </ResizablePanel>

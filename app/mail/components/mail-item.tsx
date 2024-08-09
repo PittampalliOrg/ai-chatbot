@@ -24,8 +24,11 @@ export function MailItem({ item, isSelected, folderName }: MailItemProps) {
     <button
       onClick={handleClick}
       className={cn(
-        "flex w-full flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
-        isSelected && "bg-muted"
+        "flex w-full flex-col items-start gap-2 rounded-lg p-3 text-left text-sm transition-all hover:bg-accent/50",
+        "font-normal", // Ensure consistent font weight
+        isSelected ? "bg-accent" : "bg-background",
+        "border border-transparent", // Add transparent border to prevent layout shift
+        isSelected && "border-accent" // Change border color when selected
       )}
     >
       <div className="flex w-full flex-col gap-1">
@@ -36,12 +39,10 @@ export function MailItem({ item, isSelected, folderName }: MailItemProps) {
               <span className="flex h-2 w-2 rounded-full bg-blue-600" />
             )}
           </div>
-          <div
-            className={cn(
-              "ml-auto text-xs",
-              isSelected ? "text-foreground" : "text-muted-foreground"
-            )}
-          >
+          <div className={cn(
+            "ml-auto text-xs",
+            isSelected ? "text-foreground" : "text-muted-foreground"
+          )}>
             {item.sentDateTime && formatDistanceToNow(new Date(item.sentDateTime), {
               addSuffix: true,
             })}

@@ -4,11 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { AccountSwitcherWrapper } from "./components/account-switcher-wrapper"
 import { Nav } from "./components/nav"
 import { accounts } from "./data"
-import { getEmailFolders } from "@/app/actions"
-import { ClientWrapper, LeftPanel, ResizablePanel, ResizableHandle } from "./client-wrapper"
+import { getEmailFolders } from "./actions"
+import { ClientWrapper, LeftPanel, ResizablePanel, ResizableHandle } from "./components/client-wrapper"
 import { cn } from "@/lib/utils"
+import { AccountSwitcherServer } from "./components/account-switcher-server"
 
-export default async function EmailLayout({ children, params }: { children: React.ReactNode; params: { name: string } }) {
+export default async function MailLayout({ children, params }: { children: React.ReactNode; params: { name: string } }) {
   const defaultLayout = [265, 655]
   const defaultCollapsed = false
   const navCollapsedSize = 4
@@ -16,33 +17,33 @@ export default async function EmailLayout({ children, params }: { children: Reac
 
   return (
     <TooltipProvider delayDuration={0}>
-      <ClientWrapper
-        defaultLayout={defaultLayout}
-        defaultCollapsed={defaultCollapsed}
-        navCollapsedSize={navCollapsedSize}
-      >
-        <LeftPanel
+      <div className="h-screen-dvh flex overflow-hidden bg-background prevent-shift">
+        <ClientWrapper
           defaultLayout={defaultLayout}
           defaultCollapsed={defaultCollapsed}
           navCollapsedSize={navCollapsedSize}
         >
-          <div className={cn("flex h-[52px] items-center justify-center", defaultCollapsed ? "h-[52px]" : "px-2")}>
-            <AccountSwitcherWrapper accounts={accounts} />
-          </div>
-          <Separator />
-          <Nav
-            folders={folders}
-            isCollapsed={defaultCollapsed}
-            currentFolder={params.name}
-          />
-        </LeftPanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
-          <Suspense fallback={<div>Loading content...</div>}>
-            {children}
-          </Suspense>
-        </ResizablePanel>
-      </ClientWrapper>
+          <LeftPanel
+            defaultLayout={defaultLayout}
+            defaultCollapsed={defaultCollapsed}
+            navCollapsedSize={navCollapsedSize}
+          >
+            <AccountSwitcherServer isCollapsed={defaultCollapsed} />
+            <Separator />
+            <Nav
+              folders={folders}
+              isCollapsed={defaultCollapsed}
+              currentFolder={params.name}
+            />
+          </LeftPanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
+            <Suspense fallback={<div>Loading content...</div>}>
+              {children}
+            </Suspense>
+          </ResizablePanel>
+        </ClientWrapper>
+      </div>
     </TooltipProvider>
   )
 }

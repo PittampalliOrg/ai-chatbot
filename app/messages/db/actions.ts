@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import getGraphClient from "@/app/db";
-import { removeSpacesFromFolderName } from './utils';
+import { removeSpacesFromFolderName } from '../../mail/utils';
 
 let schema = z.object({
   subject: z.string(),

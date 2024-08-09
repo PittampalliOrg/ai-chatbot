@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { formatEmailString, removeSpacesFromFolderName } from '@/app/messages/db/utils';
+import { formatEmailString, removeSpacesFromFolderName } from '@/app/mail/utils';
 import { getEmailsForFolder } from '@/app/messages/db/queries';
 
 export async function EmailListColumn({
