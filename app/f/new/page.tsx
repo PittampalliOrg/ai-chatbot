@@ -9,7 +9,7 @@ import { auth, EnrichedSession } from '@/auth';
 export default function Page() {
   return (
     <div className="grid grid-cols-6 gap-2 h-screen p-2">
-      <FolderColumn isCollapsed={false} links={[]} id={''} name={''} email_count={''} />
+      <FolderColumn />
       <Compose />
     </div>
   );
@@ -40,7 +40,7 @@ async function Compose() {
             From:
           </label>
           <p className="pl-14 border-none bg-white dark:bg-gray-950 text-black dark:text-white px-3 py-2 focus:outline-none">
-            {session?.user?.email}
+          
           </p>
         </div>
         <hr className="border-t border-gray-200 dark:border-gray-800" />

@@ -1,4 +1,4 @@
-import { auth, EnrichedSession } from 'auth';
+import { auth, EnrichedSession } from '@/auth';
 
 export default async function Page() {
   const session = (await auth()) as EnrichedSession

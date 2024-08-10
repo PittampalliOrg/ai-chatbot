@@ -1,5 +1,5 @@
 import { getEmailInFolder } from '@/app/messages/db/queries';
-import { formatEmailString } from '@/app/messages/db/utils';
+import { formatEmailString } from '@/app/mail/utils';
 import { Toolbar, ToolbarSkeleton } from '@/app/messages/components/toolbar';
 import { EmailListColumn } from '@/app/messages/components/email-list-column';
 import { FolderColumn } from '@/app/messages/components/folder-column';

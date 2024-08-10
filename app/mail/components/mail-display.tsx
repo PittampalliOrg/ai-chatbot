@@ -1,256 +1,170 @@
-import { addDays } from "date-fns"
-import { addHours } from "date-fns"
 import { format } from "date-fns"
-import { nextSaturday } from "date-fns"
-import {
-  Archive,
-  ArchiveX,
-  Clock,
-  Forward,
-  MoreVertical,
-  Reply,
-  ReplyAll,
-  Trash2,
-} from "lucide-react"
-
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "../../../components/ui/dropdown-menu"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../../components/ui/avatar"
-import { Button } from "../../../components/ui/button"
-import { Calendar } from "../../../components/ui/calendar"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "../../../components/ui/dropdown-menu"
-import { Label } from "../../../components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../../../components/ui/popover"
-import { Separator } from "../../../components/ui/separator"
-import { Switch } from "../../../components/ui/switch"
-import { Textarea } from "../../../components/ui/textarea"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "../../../components/ui/tooltip"
+import { Archive, ArchiveX, Clock, Forward, MoreVertical, Reply, ReplyAll, Trash2 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Message } from "@microsoft/microsoft-graph-types"
-import { getEmailsForFolder } from "@/app/messages/db/queries"
+import { getEmailById } from "@/app/messages/db/queries"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ComposeEmail } from "./compose-email";
+import { deleteEmail, flagEmail } from '@/app/mail/actions';
+import { Flag } from 'lucide-react';
 
-export async function MailDisplay() {
-  const mail: Message[] = await getEmailsForFolder("inbox")
-  const today = new Date()
+interface MailDisplayProps {
+  emailId: string | null;
+}
+
+export async function MailDisplay({ emailId }: MailDisplayProps) {
+  if (!emailId || emailId === 'new') {
+    return <ComposeEmail />;
+  }
+
+  const email = await getEmailById(emailId);
+
+  if (!email) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        Email not found
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center p-2">
-        <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <Archive className="h-4 w-4" />
-                <span className="sr-only">Archive</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Archive</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <ArchiveX className="h-4 w-4" />
-                <span className="sr-only">Move to junk</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Move to junk</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <Trash2 className="h-4 w-4" />
-                <span className="sr-only">Move to trash</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Move to trash</TooltipContent>
-          </Tooltip>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-          <Tooltip>
-            <Popover>
-              <PopoverTrigger asChild>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" disabled={!mail}>
-                    <Clock className="h-4 w-4" />
-                    <span className="sr-only">Snooze</span>
-                  </Button>
-                </TooltipTrigger>
-              </PopoverTrigger>
-              <PopoverContent className="flex w-[535px] p-0">
-                <div className="flex flex-col gap-2 border-r px-2 py-4">
-                  <div className="px-4 text-sm font-medium">Snooze until</div>
-                  <div className="grid min-w-[250px] gap-1">
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Later today{" "}
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addHours(today, 4), "E, h:m b")}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Tomorrow
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addDays(today, 1), "E, h:m b")}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      This weekend
-                      <span className="ml-auto text-muted-foreground">
-                        {format(nextSaturday(today), "E, h:m b")}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      Next week
-                      <span className="ml-auto text-muted-foreground">
-                        {format(addDays(today, 7), "E, h:m b")}
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-2">
-                  <Calendar />
-                </div>
-              </PopoverContent>
-            </Popover>
-            <TooltipContent>Snooze</TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <Reply className="h-4 w-4" />
-                <span className="sr-only">Reply</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reply</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <ReplyAll className="h-4 w-4" />
-                <span className="sr-only">Reply all</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reply all</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" disabled={!mail}>
-                <Forward className="h-4 w-4" />
-                <span className="sr-only">Forward</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Forward</TooltipContent>
-          </Tooltip>
-        </div>
-        <Separator orientation="vertical" className="mx-2 h-6" />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" disabled={!mail}>
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">More</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-            <DropdownMenuItem>Star thread</DropdownMenuItem>
-            <DropdownMenuItem>Add label</DropdownMenuItem>
-            <DropdownMenuItem>Mute thread</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between p-2 border-b">
+        <ActionButtons emailId={emailId} email={email} />
+        <MoreOptions />
       </div>
-      <Separator />
-      {mail ? (
-        <div className="flex flex-1 flex-col">
-          <div className="flex items-start p-4">
-            <div className="flex items-start gap-4 text-sm">
-              <Avatar>
-                <AvatarImage alt={mail[0].sender?.emailAddress?.name ?? ""} />
-                {/* <AvatarFallback>
-                  {mail[0].sender?.emailAddress?.name ?? "Unknown"}
-                    .split(" ")
-                    .map((chunk: string) => chunk[0])
-                    .join("")}
-                </AvatarFallback> */}
-              </Avatar>
-              <div className="grid gap-1">
-                <div className="font-semibold">{mail[0]?.sender?.emailAddress?.name}</div>
-                <div className="line-clamp-1 text-xs">{mail[0].subject}</div>
-                <div className="line-clamp-1 text-xs">
-                  <span className="font-medium">Reply-To:</span> {mail[0].sender?.emailAddress?.address}
-                </div>
-              </div>
-            </div>
-            {mail[0].sentDateTime && (
-              <div className="ml-auto text-xs text-muted-foreground">
-                {format(new Date(mail[0].sentDateTime), "PPpp")}
-              </div>
-            )}
-          </div>
-          <Separator />
-          <div className="flex-1 whitespace-pre-wrap p-4 text-sm">
-            {mail[0].body?.content}
-          </div>
-          <Separator className="mt-auto" />
-          <div className="p-4">
-            <form>
-              <div className="grid gap-4">
-                <Textarea
-                  className="p-4"
-                  placeholder={`Reply ${mail[0].sender?.emailAddress?.name}...`}
-                />
-                <div className="flex items-center">
-                  <Label
-                    htmlFor="mute"
-                    className="flex items-center gap-2 text-xs font-normal"
-                  >
-                    <Switch id="mute" aria-label="Mute thread" /> Mute this
-                    thread
-                  </Label>
-                  <Button
-                    // onClick={(e) => e.preventDefault()}
-                    // size="sm"
-                    // className="ml-auto"
-                  >
-                    Send
-                  </Button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : (
-        <div className="p-8 text-center text-muted-foreground">
-          No message selected
-        </div>
-      )}
+      <ScrollArea className="flex-grow">
+        <EmailContent email={email} />
+      </ScrollArea>
     </div>
+  );
+}
+
+function ActionButtons({ emailId, email }: { emailId: string; email: Message }) {
+  return (
+    <div className="flex items-center space-x-2">
+      <form action={flagEmail.bind(null, emailId, !(email.flag?.flagStatus === 'flagged'))}>
+        <ActionButton 
+          icon={<Flag className={`h-4 w-4 ${email.flag?.flagStatus === 'flagged' ? 'fill-yellow-500' : ''}`} />} 
+          label={email.flag?.flagStatus === 'flagged' ? "Unflag" : "Flag"} 
+        />
+      </form>
+      <ActionButton icon={<Archive className="h-4 w-4" />} label="Archive" />
+      <ActionButton icon={<ArchiveX className="h-4 w-4" />} label="Move to junk" />
+      <form action={deleteEmail.bind(null, emailId)}>
+        <ActionButton 
+          icon={<Trash2 className="h-4 w-4" />} 
+          label="Delete" 
+        />
+      </form>
+      <ActionButton icon={<Clock className="h-4 w-4" />} label="Snooze" />
+    </div>
+  )
+}
+
+function ActionButton({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon" type="submit">
+          {icon}
+          <span className="sr-only">{label}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function MoreOptions() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+          <span className="sr-only">More</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem>Mark as unread</DropdownMenuItem>
+        <DropdownMenuItem>Star thread</DropdownMenuItem>
+        <DropdownMenuItem>Add label</DropdownMenuItem>
+        <DropdownMenuItem>Mute thread</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function EmailContent({ email }: { email: Message }) {
+  return (
+    <div className="flex flex-col flex-grow overflow-auto">
+      <EmailHeader email={email} />
+      <Separator />
+      <div className="flex-grow p-4 text-sm whitespace-pre-wrap overflow-auto" dangerouslySetInnerHTML={{ __html: email.body?.content ?? "" }} />
+      <Separator />
+      <ReplyForm email={email} />
+    </div>
+  )
+}
+
+function EmailHeader({ email }: { email: Message }) {
+  return (
+    <div className="flex items-start p-4 space-x-4">
+      <Avatar>
+        <AvatarImage alt={email.sender?.emailAddress?.name || ""} />
+        <AvatarFallback>
+          {email.sender?.emailAddress?.name
+            ?.split(" ")
+            .map((chunk) => chunk[0])
+            .join("")}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-grow min-w-0">
+        <div className="flex items-center justify-between">
+          <div className="font-semibold truncate">{email.sender?.emailAddress?.name}</div>
+          {email.sentDateTime && (
+            <div className="text-xs text-muted-foreground">
+              {format(new Date(email.sentDateTime), "PPpp")}
+            </div>
+          )}
+        </div>
+        <div className="text-sm truncate">{email.subject}</div>
+        <div className="text-xs text-muted-foreground truncate">
+          To: {email.toRecipients?.map(r => r.emailAddress?.address).join(", ")}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ReplyForm({ email }: { email: Message }) {
+  return (
+    <form className="p-4 border-t">
+      <div className="space-y-4">
+        <Textarea
+          className="w-full p-2"
+          placeholder={`Reply to ${email.sender?.emailAddress?.name}...`}
+          rows={3}
+        />
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor="mute"
+            className="flex items-center space-x-2 text-xs"
+          >
+            <input type="checkbox" id="mute" className="form-checkbox" />
+            <span>Mute this thread</span>
+          </Label>
+          <Button type="submit" size="sm">
+            Send
+          </Button>
+        </div>
+      </div>
+    </form>
   )
 }

@@ -1,8 +1,9 @@
 
 
-import  getGraphClient from '@/app/db'
+import getGraphClient from '@/app/db'
 import { Message } from '@microsoft/microsoft-graph-types';
-import { removeSpacesFromFolderName } from './utils';
+import { removeSpacesFromFolderName } from '../../mail/utils';
+import { revalidatePath } from 'next/cache';
 
 export type Folder = {
   id: string;
@@ -11,20 +12,20 @@ export type Folder = {
 };
 
 export async function getFoldersWithEmailCount() {
-    const client = await getGraphClient();
-  
-    const response = await client
-      .api('/me/mailFolders')
-      .get();
-  
-    console.log(response);
-  
-    // convert the response to the format we need
-    const folders: Folder[] = response.value.map((folder: any) => ({
-      id: folder.id,
-      name: folder.displayName,
-      email_count: folder.totalItemCount,
-    }));
+  const client = await getGraphClient();
+
+  const response = await client
+    .api('/me/mailFolders')
+    .get();
+
+  console.log(response);
+
+  // convert the response to the format we need
+  const folders: Folder[] = response.value.map((folder: any) => ({
+    id: folder.id,
+    name: folder.displayName,
+    email_count: folder.totalItemCount,
+  }));
 
   let specialFoldersOrder = ['Inbox', 'Drafts', 'Deleted Items'];
   let specialFolders = specialFoldersOrder
@@ -48,56 +49,29 @@ type EmailWithSender = {
   last_name: string;
   email: string;
 };
-
-export async function getEmailsForFolder(folderName: string) {
+export async function getEmailsForFolder(folderName: string = "Inbox") {
   // Authentication setup should be done outside this function and passed in if needed
   const client = await getGraphClient();
 
-// remove spaces in folder name
+  // remove spaces in folder name
   let originalFolderName = removeSpacesFromFolderName(folderName);
 
   let endpoint = `/me/mailFolders/${originalFolderName}/messages`;
-  // let queryParams = new Array<string>();
 
-  // Add search filter if provided
-  // if (search) {
-  //   const searchFilter = `(from/emailAddress/name contains '${search}' or from/emailAddress/address contains '${search}' or subject contains '${search}' or body contains '${search}')`;
-  //   queryParams.push(`$filter=${encodeURIComponent(searchFilter)}`);
-  // }
-
-  // // Add sorting
-  // queryParams.push("$orderby=sentDateTime desc");
-
-  // Select specific fields
-//  queryParams.push("$select=id,subject,body,sentDateTime,from,toRecipients");
-
-  // Combine query parameters
-  // if (queryParams.length > 0) {
-  //   endpoint += "?" + queryParams.join("&");
-  // }
 
   try {
-      const response = await client.api(endpoint).get();
-      const emails: Message[] = response.value;
-      // Transform the Graph API response to match the EmailWithSender type
-      // const emails: EmailWithSender[] = graphEmails.map((email: Message) => ({
-      //   id: email.id || "",  // Graph API uses string IDs, so we parse to int
-      //   sender_id: email.from?.emailAddress?.address || "",  // We don't have this info from Graph API
-      //   recipient_id: email.toRecipients && email.toRecipients.length > 0 ? email.toRecipients[0].emailAddress?.address || "" : "",  // We don't have this info from Graph API
-      //   subject: email.subject || "",
-      //   body: email.body?.content || "",
-      //   sent_date: email?.sentDateTime ? new Date(email.sentDateTime) : new Date(),
-      //   first_name: email.from?.emailAddress?.name || "", // .split(' ')[0],
-      //   last_name: email.from?.emailAddress?.name || "", // .split(' ').slice(1).join(' '),
-      //   email: email.from?.emailAddress?.address || ""
-      // }));
-  
-      return emails;
-    } catch (error) {
-      console.error("Error fetching emails:", error);
-      throw error;
-    }
+    const response = await client.api(endpoint).get();
+    const emails: Message[] = response.value;
+
+    revalidatePath(`/mail/${folderName}`)
+    return emails;
+  } catch (error) {
+    console.error("Error fetching emails:", error);
+    throw error;
+  };
+
 }
+
 
 // Helper function to convert string to title case
 // function toTitleCase(str: string): string {
@@ -111,24 +85,24 @@ export async function getEmailInFolder(folderName: string, emailId: string) {
   let originalFolderName = removeSpacesFromFolderName(folderName);
   let endpoint = `/me/mailFolders/${originalFolderName}/messages/${emailId}`;
 
-    const response = await client.api(endpoint)
+  const response = await client.api(endpoint)
     .get();
-   //   .select('id,subject,body,sentDateTime,from,toRecipients')
+  //   .select('id,subject,body,sentDateTime,from,toRecipients')
 
-    // Transform the Graph API response to match the EmailWithSender type
-    const email: EmailWithSender = {
-      id: response.id,
-      sender_id: response.from.emailAddress.address, // We don't have this info from Graph API
-      recipient_id: response.toRecipients[0].emailAddress.address, // We don't have this info from Graph API
-      subject: response.subject,
-      body: response.body.content,
-      sent_date: new Date(response.sentDateTime),
-      first_name: response.from.emailAddress.name.split(' ')[0],
-      last_name: response.from.emailAddress.name.split(' ').slice(1).join(' '),
-      email: response.from.emailAddress.address
-    };
+  // Transform the Graph API response to match the EmailWithSender type
+  const email: EmailWithSender = {
+    id: response.id,
+    sender_id: response.from.emailAddress.address, // We don't have this info from Graph API
+    recipient_id: response.toRecipients[0].emailAddress.address, // We don't have this info from Graph API
+    subject: response.subject,
+    body: response.body.content,
+    sent_date: new Date(response.sentDateTime),
+    first_name: response.from.emailAddress.name.split(' ')[0],
+    last_name: response.from.emailAddress.name.split(' ').slice(1).join(' '),
+    email: response.from.emailAddress.address
+  };
 
-    return email;
+  return email;
 }
 
 type UserEmail = {
@@ -158,3 +132,30 @@ export async function getAllEmailAddresses(): Promise<UserEmail[]> {
   }
 }
 
+
+export async function getEmailById(id: string): Promise<Message | null> {
+  const client = await getGraphClient()
+  try {
+    const response = await client
+      .api(`/me/messages/${id}`)
+      .select('id,subject,bodyPreview,body,receivedDateTime,isRead,sender,sentDateTime,categories')
+      .get()
+    return response
+  } catch (error) {
+    console.error("Error fetching email:", error)
+    return null
+  }
+}
+
+import { MailFolder } from "@microsoft/microsoft-graph-types"
+
+
+export async function getEmailFolders(): Promise<MailFolder[]> {
+  const client = await getGraphClient()
+  const response = await client
+    .api("/me/mailFolders")
+    .select("id,displayName,parentFolderId,childFolderCount,unreadItemCount,totalItemCount")
+    .get()
+
+  return response.value
+}

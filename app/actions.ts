@@ -9,8 +9,7 @@ import { type Chat } from '@/lib/types'
 import { TodoTask, TodoTaskList, Message, MailFolder } from '@microsoft/microsoft-graph-types'
 import  getGraphClient from '@/app/db'
 import { OptimisticTask, Mail } from '@/types'
-import { removeSpacesFromFolderName } from '@/lib/utils'
-
+import { removeSpacesFromFolderName } from './mail/utils'
 
 export async function getChats(userId?: string | null) {
   const session = (await auth()) as EnrichedSession;
@@ -176,73 +175,140 @@ export async function getMissingKeys() {
     .filter(key => key !== '')
 }
 
-
-
-
-
-export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
+export async function getTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", taskIds?: string[]): Promise<TodoTask[]> {
   const client = await getGraphClient();
-
+  
   const response = await client
-    .api('/me/messages')
-    .select('id,subject,bodyPreview,receivedDateTime,isRead,from')
-    .top(100)
+    .api(`/me/todo/lists/${listId}/tasks`)
     .get();
-
+  
   console.log(response);
 
-  let emails: Mail[] = response.value.map((message: any) => ({
-    id: message.id,
-    name: message.from.emailAddress.name,
-    email: message.from.emailAddress.address,
-    subject: message.subject,
-    text: message.bodyPreview,
-    date: message.receivedDateTime,
-    read: message.isRead,
-    labels: [], // Labels would need additional logic or a different API call to retrieve
-  }));
+  let tasks: TodoTask[] = response.value;
 
-  if (emailIds && emailIds.length > 0) {
-    emails = emails.filter(email => emailIds.includes(email.id));
+  if (taskIds && taskIds.length > 0) {
+    tasks = tasks.filter(task => taskIds.includes(task.id as string));
   }
 
-  return emails;
+  return tasks;
 }
 
-
-// function to get email folders
-export async function getEmailFolders(): Promise<MailFolder[]> {
+export async function getLists() {
   const client = await getGraphClient();
-
   const response = await client
-    .api('/me/mailFolders')
+    .api(`/me/todo/lists`)
     .get();
 
-  console.log(response);
+    console.log(response);
 
-  return response.value;
+  const lists: TodoTaskList[] = await response.value;
+
+  return lists;
 }
 
-export async function getMessagesForFolder(folderName: string = "Inbox"): Promise<Mail[]>  {
+
+export async function addTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", tasks: string[]): Promise<TodoTask[]> {
   const client = await getGraphClient();
-  const response = await client.api(`/me/mailFolders/${removeSpacesFromFolderName(folderName)}/messages`)
-    .select('subject,from,receivedDateTime,bodyPreview')
-    .top(50)
-    .get();
-  
-    let emails: Mail[] = response.value.map((message: any) => ({
-      id: message.id,
-      name: message.from.emailAddress.name,
-      email: message.from.emailAddress.address,
-      subject: message.subject,
-      text: message.bodyPreview,
-      date: message.receivedDateTime,
-      read: message.isRead,
-      labels: [], // Labels would need additional logic or a different API call to retrieve
-    }));
-  
-    return emails;
+  let addedTasks: TodoTask[] = [];
+
+  if (tasks.length < 2) {
+    const todoTask = { title: tasks[0] };
+    const singleTaskResponse = await client
+      .api(`/me/todo/lists/${listId}/tasks`)
+      .post(todoTask);
+
+    addedTasks.push({
+      id: singleTaskResponse.id,
+      title: singleTaskResponse.title,
+      status: singleTaskResponse.status,
+      createdDateTime: singleTaskResponse.createdDateTime,
+      lastModifiedDateTime: singleTaskResponse.lastModifiedDateTime,
+      importance: singleTaskResponse.importance,
+      isReminderOn: singleTaskResponse.isReminderOn,
+      hasAttachments: singleTaskResponse.hasAttachments,
+      categories: singleTaskResponse.categories,
+      body: {
+        content: singleTaskResponse.body.content,
+        contentType: singleTaskResponse.body.contentType,
+      },
+    });
+  } else {
+    const batchRequestBody = {
+      requests: tasks.map((task, index) => ({
+        id: index.toString(),
+        method: "POST",
+        url: `/me/todo/lists/${listId}/tasks`,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: { title: task }
+      }))
+    };
+
+    const batchResponse = await client
+      .api('/$batch')
+      .post(batchRequestBody);
+
+    const responses = batchResponse.responses;
+    addedTasks = responses
+      .filter((res: any) => res.status === 201) // Only include successfully created tasks
+      .map((res: any) => ({
+        id: res.body.id,
+        title: res.body.title,
+        status: res.body.status,
+        createdDateTime: res.body.createdDateTime,
+        lastModifiedDateTime: res.body.lastModifiedDateTime,
+        importance: res.body.importance,
+        isReminderOn: res.body.isReminderOn,
+        hasAttachments: res.body.hasAttachments,
+        categories: res.body.categories,
+        body: {
+          content: res.body.body.content,
+          contentType: res.body.body.contentType,
+        },
+      }));
+  }
+
+  revalidatePath('/');
+  console.log(addedTasks);
+  return addedTasks;
 }
+
+
+export async function deleteTasks(listId: string = "AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=", taskIds: string[]) {
+
+  const client = await getGraphClient();
+
+if (taskIds.length > 0) {
+
+  await client
+    .api(`/me/todo/lists/${listId}/tasks/${taskIds[0]}`)
+    .delete();
+}
+
+else {
+
+  const batchRequestBody = {
+    requests: taskIds.map((taskId, index) => ({
+      id: index.toString(),
+      method: "DELETE",
+      url: `/me/todo/lists/${listId}/tasks/${taskId}`,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }))
+  };
+
+  await client
+  .api('/$batch')
+  .post(batchRequestBody);
+}
+
+revalidatePath('/');
+}
+
+
+
 
 
 export async function getExcelEmbedUrl(){

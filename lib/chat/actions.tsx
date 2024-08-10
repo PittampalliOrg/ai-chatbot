@@ -32,7 +32,6 @@ import WeatherCard from '@/components/weather/weather'
 import { TodoList } from '@/components/tasks/tasks'
 import Search from '@/components/search'
 import { Mail as MailType, OptimisticTask } from '@/types'
-import { Mail } from '@/app/mail/components/mail'
 import { accounts } from '@/app/mail/data'
 import { TaskComboboxForm } from '@/app/tasks/tasks-combobox-form'
 
@@ -468,7 +467,7 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <Mail mails={items} accounts={accounts} />
+              Mail
             </BotCard>
           );;
         },
