@@ -34,7 +34,7 @@ import Search from '@/components/search'
 import { Mail as MailType, OptimisticTask } from '@/types'
 import { Mail } from '@/app/mail/components/mail'
 import { accounts } from '@/app/mail/data'
-import { TaskComboboxForm } from '@/app/task-table/tasks-combobox-form'
+import { TaskComboboxForm } from '@/app/tasks/tasks-combobox-form'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'

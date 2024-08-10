@@ -19,19 +19,20 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { TodoTaskList } from "@microsoft/microsoft-graph-types"
+import { useRouter } from 'next/navigation'
 
 interface TaskComboboxFormProps {
-  lists: TodoTaskList[] | undefined
-  onListSelect: (listId: string) => void
-  isLoading?: boolean
+  lists: TodoTaskList[]
 }
 
-export function TaskComboboxForm({ lists, onListSelect, isLoading = false }: TaskComboboxFormProps) {
+export function TaskComboboxForm({lists}: TaskComboboxFormProps) {
   const [open, setOpen] = React.useState(false)
   const [value, setValue] = React.useState("")
+  const router = useRouter()
 
-  if (isLoading) {
-    return <Button disabled>Loading lists...</Button>
+  const onListSelect = (listId: string) => {
+    setValue(listId)  // Set the selected list ID
+    router.push(`/tasks/${listId}`)
   }
 
   if (!lists || lists.length === 0) {
@@ -48,7 +49,7 @@ export function TaskComboboxForm({ lists, onListSelect, isLoading = false }: Tas
           className="w-[200px] justify-between"
         >
           {value
-            ? lists.find((list) => list.id === value)?.displayName
+            ? lists.find((list) => list.id === value)?.displayName || "Select list..."
             : "Select list..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -63,7 +64,7 @@ export function TaskComboboxForm({ lists, onListSelect, isLoading = false }: Tas
               <CommandItem
                 key={list.id}
                 value={list.id}
-                onSelect={(currentValue) => {
+                onSelect={(currentValue: string) => {
                   setValue(currentValue === value ? "" : currentValue)
                   setOpen(false)
                   onListSelect(currentValue)

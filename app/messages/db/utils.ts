@@ -22,12 +22,4 @@ export function formatEmailString(
 //   });
 // }
 
-export function removeSpacesFromFolderName(folderName: string): string {
-  if (!folderName) {
-    return '';
-  }
 
-  const folder = folderName.replace(/\s+/g, '');
-
-  return folder;
-}
