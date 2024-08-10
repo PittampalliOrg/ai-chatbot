@@ -11,6 +11,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -55,6 +56,7 @@ export function TaskComboboxForm({ lists, onListSelect, isLoading = false }: Tas
       <PopoverContent className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder="Search list..." />
+          <CommandList>
           <CommandEmpty>No list found.</CommandEmpty>
           <CommandGroup>
             {lists.map((list) => (
@@ -77,6 +79,7 @@ export function TaskComboboxForm({ lists, onListSelect, isLoading = false }: Tas
               </CommandItem>
             ))}
           </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
