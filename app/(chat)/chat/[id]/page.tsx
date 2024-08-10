@@ -3,8 +3,8 @@ import { notFound, redirect } from 'next/navigation'
 
 import { auth, EnrichedSession } from '@/auth'
 import { getChat, getMissingKeys } from '@/app/actions'
-import { Chat } from '@/components/chat'
-import { AI } from '@/lib/chat/actions'
+import { Chat } from '@/components/chat/chat'
+import { AI } from '@/app/(chat)/actions'
 
 export interface ChatPageProps {
   params: {
@@ -35,7 +35,7 @@ export async function generateMetadata({
 
 export default async function ChatPage({ params }: ChatPageProps) {
   const session = (await auth()) as EnrichedSession
-  
+
   const missingKeys = await getMissingKeys()
 
   if (!session?.user) {

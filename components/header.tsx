@@ -13,7 +13,7 @@ import {
 import { UserMenu } from '@/components/user-menu'
 import { SidebarMobile } from './sidebar-mobile'
 import { SidebarToggle } from './sidebar-toggle'
-import { ChatHistory } from './chat-history'
+import { ChatHistory } from './chat/chat-history'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { DynamicNavLinks } from '@/components/dynamic-nav-links'
 

@@ -24,7 +24,7 @@ import {
   sleep,
   nanoid
 } from '@/lib/utils'
-import { addTasks, deleteTasks, getEmails, getTasks, saveChat } from '@/app/actions'
+import { addTasks, deleteTasks,getTasks, saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth, EnrichedSession } from '@/auth'
@@ -34,6 +34,7 @@ import Search from '@/components/search'
 import { Mail as MailType, OptimisticTask } from '@/types'
 import { accounts } from '@/app/mail/data'
 import { TaskComboboxForm } from '@/app/tasks/tasks-combobox-form'
+import { getEmails } from '../mail/actions'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -321,7 +322,7 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=" />
+              <p>Tasks</p>
             </BotCard>
           );;
         },
@@ -369,7 +370,7 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <TaskComboboxForm initialListId="AAMkADhmYjY3M2VlLTc3YmYtNDJhMy04MjljLTg4NDI0NzQzNjJkMAAuAAAAAAAqiN_iXOf5QJoancmiEuQzAQAVAdL-uyq-SKcP7nACBA3lAAAAO9QQAAA=" initialTasks={addTaskResponse} />
+              <p>Tasks</p>
             </BotCard>
           );
         },
