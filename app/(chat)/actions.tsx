@@ -581,8 +581,7 @@ export const getUIStateFromAIState = (aiState: Chat) => {
               </BotCard>
             ) : tool.toolName === 'showEmails' ? (
               <BotCard>
-                {/* @ts-expect-error */}
-                <Mail props={tool.result} />
+                Mail
               </BotCard>
             ) : null
           })
