@@ -54,7 +54,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         >
           <div className="flex flex-col h-full">
             <Header />
-            <main className="flex-1 overflow-hidden">{children}</main>
+            <main className="flex-1 overflow-auto pt-4 px-4">{children}</main>
           </div>
           <TailwindIndicator />
         </Providers>
