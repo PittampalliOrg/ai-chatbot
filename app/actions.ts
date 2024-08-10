@@ -9,7 +9,6 @@ import { type Chat } from '@/lib/types'
 import { TodoTask, TodoTaskList, Message, MailFolder } from '@microsoft/microsoft-graph-types'
 import  getGraphClient from '@/app/db'
 import { OptimisticTask, Mail } from '@/types'
-import { removeSpacesFromFolderName } from './mail/utils'
 
 export async function getChats(userId?: string | null) {
   const session = (await auth()) as EnrichedSession;

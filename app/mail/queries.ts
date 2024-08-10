@@ -2,7 +2,7 @@
 
 import getGraphClient from '@/app/db'
 import { Message } from '@microsoft/microsoft-graph-types';
-import { removeSpacesFromFolderName } from '../../mail/utils';
+import { removeSpacesFromFolderName } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 
 export type Folder = {

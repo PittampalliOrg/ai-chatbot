@@ -4,7 +4,7 @@
 import { MailFolder } from '@microsoft/microsoft-graph-types'
 import  getGraphClient from '@/app/db'
 import { Mail } from '@/types'
-import { removeSpacesFromFolderName } from './utils'
+import { removeSpacesFromFolderName } from '@/lib/utils'
 import { Message } from '@microsoft/microsoft-graph-types'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation';

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { removeSpacesFromFolderName } from '@/app/mail/utils'
+import { removeSpacesFromFolderName } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MailFolder } from "@microsoft/microsoft-graph-types"

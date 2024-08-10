@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { MailList } from "@/app/mail/components/mail-list"
 import { MailDisplay } from "@/app/mail/components/mail-display"
-import { getEmailsForFolder } from "@/app/messages/db/queries"
+import { getEmailsForFolder } from "@/app/mail/queries"
 import { Message } from "@microsoft/microsoft-graph-types"
 
 interface MailListPageProps {

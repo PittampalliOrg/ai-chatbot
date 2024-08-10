@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Message } from "@microsoft/microsoft-graph-types"
-import { getEmailById } from "@/app/messages/db/queries"
+import { getEmailById } from "@/app/mail/queries"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ComposeEmail } from "./compose-email";
 import { deleteEmail, flagEmail } from '@/app/mail/actions';
@@ -50,17 +50,17 @@ function ActionButtons({ emailId, email }: { emailId: string; email: Message }) 
   return (
     <div className="flex items-center space-x-2">
       <form action={flagEmail.bind(null, emailId, !(email.flag?.flagStatus === 'flagged'))}>
-        <ActionButton 
-          icon={<Flag className={`h-4 w-4 ${email.flag?.flagStatus === 'flagged' ? 'fill-yellow-500' : ''}`} />} 
-          label={email.flag?.flagStatus === 'flagged' ? "Unflag" : "Flag"} 
+        <ActionButton
+          icon={<Flag className={`h-4 w-4 ${email.flag?.flagStatus === 'flagged' ? 'fill-yellow-500' : ''}`} />}
+          label={email.flag?.flagStatus === 'flagged' ? "Unflag" : "Flag"}
         />
       </form>
       <ActionButton icon={<Archive className="h-4 w-4" />} label="Archive" />
       <ActionButton icon={<ArchiveX className="h-4 w-4" />} label="Move to junk" />
       <form action={deleteEmail.bind(null, emailId)}>
-        <ActionButton 
-          icon={<Trash2 className="h-4 w-4" />} 
-          label="Delete" 
+        <ActionButton
+          icon={<Trash2 className="h-4 w-4" />}
+          label="Delete"
         />
       </form>
       <ActionButton icon={<Clock className="h-4 w-4" />} label="Snooze" />
