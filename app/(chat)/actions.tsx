@@ -24,7 +24,7 @@ import {
   sleep,
   nanoid
 } from '@/lib/utils'
-import { addTasks, deleteTasks,getTasks, saveChat } from '@/app/actions'
+import { addTasks, deleteTasks,getLists,getTasks, saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth, EnrichedSession } from '@/auth'
@@ -35,6 +35,9 @@ import { Mail as MailType, OptimisticTask } from '@/types'
 import { accounts } from '@/app/mail/data'
 import { TaskComboboxForm } from '@/app/tasks/tasks-combobox-form'
 import { getEmails } from '../mail/actions'
+import { columns } from '@/app/tasks/columns'
+import { DataTable } from '../tasks/data-table'
+import { TodoTaskList } from '@microsoft/microsoft-graph-types'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -233,58 +236,10 @@ Your responses should be clear, concise, and focused on task management. Always 
       return textNode
     },
     tools: {
-      getWeather: {
-        description: 'Get the weather information for a given city.',
-        parameters: z.object({
-          city: z.string().describe('The name of the city.'),
-        }),
-        generate: async function* ({ city }) {
-          const toolCallId = nanoid();
-
-          aiState.done({
-            ...aiState.get(),
-            messages: [
-              ...aiState.get().messages,
-              {
-                id: nanoid(),
-                role: 'assistant',
-                content: [
-                  {
-                    type: 'tool-call',
-                    toolName: 'getWeather',
-                    toolCallId,
-                    args: { city },
-                  },
-                ],
-              },
-              {
-                id: nanoid(),
-                role: 'tool',
-                content: [
-                  {
-                    type: 'tool-result',
-                    toolName: 'getWeather',
-                    toolCallId,
-                    result: { city },
-                  },
-                ],
-              },
-            ],
-          });
-
-          return (
-            <BotCard>
-              <WeatherCard city={city} />
-            </BotCard>
-          )
-        }
-      },
       showTasks: {
         description: 'Display the user tasks.',
-        parameters: z.object({
-          count: z.number().default(5).describe('The number of tasks to display.')
-        }),
-        generate: async function* ({ count }) {
+        parameters: z.object({}),
+        generate: async function* () {
           const toolCallId = nanoid();
 
           aiState.done({
@@ -318,13 +273,16 @@ Your responses should be clear, concise, and focused on task management. Always 
             ],
           });
 
-          const items: OptimisticTask[] = await getTasks();
+          const tasks: OptimisticTask[] = await getTasks();
+          const lists: TodoTaskList[] = await getLists();
 
           return (
+            <>
             <BotCard>
-              <p>Tasks</p>
+              <DataTable columns={columns} data={tasks} initialTasks={tasks} listId={undefined}/>
             </BotCard>
-          );;
+            </>
+          );
         },
       },
       addTasks: {
