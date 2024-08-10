@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { initializeGraphClient } from '../../lib/graphClient';
+import { initializeGraphClient } from '../../lib/kiotaClientSetup';
 import { MailFolder } from '@/kiota/models';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

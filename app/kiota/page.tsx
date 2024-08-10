@@ -1,27 +1,44 @@
-import { AnonymousAuthenticationProvider, RequestInformation } from "@microsoft/kiota-abstractions";
-import { FetchRequestAdapter } from "@microsoft/kiota-http-fetchlibrary";
-import { createApiClient, ApiClient } from '@/kiota/apiClient';
-import { auth, EnrichedSession } from '@/auth';
+// app/components/MailFolders.tsx
 
-export function initializeGraphClient(accessToken: string): ApiClient {
-  const authProvider = new AnonymousAuthenticationProvider();
+import React from 'react';
+import { useSession } from 'next-auth/react';
+import { getUserMailFolders } from './graphActions';
+import { MailFolderCollectionResponse } from '@/kiota/models';  // Adjust the import path as needed
 
-  const requestAdapter = new FetchRequestAdapter(authProvider);
-  return createApiClient(requestAdapter);
+export default function MailFolders() {
+    const { data: session, status } = useSession();
+    const [folders, setFolders] = React.useState<MailFolderCollectionResponse | null>(null);
+    const [error, setError] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        async function fetchFolders() {
+            if (status === 'authenticated') {
+                try {
+                    const response = await getUserMailFolders();
+                    setFolders(response || null);
+                } catch (err) {
+                    setError('Failed to fetch mail folders');
+                }
+            }
+        }
+        fetchFolders();
+    }, [status]);
+
+    if (status === 'loading') return <p>Loading session...</p>;
+    if (status === 'unauthenticated') return <p>Access Denied</p>;
+    if (error) return <p>Error: {error}</p>;
+    if (!folders) return <p>Loading folders...</p>;
+
+    return (
+        <div>
+            <h1>Mail Folders</h1>
+            <ul>
+                {folders.value?.map(folder => (
+                    <li key={folder.id}>
+                        {folder.displayName} ({folder.totalItemCount} items)
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
 }
-
-
-const page = async () => {
-    const session = (await auth()) as EnrichedSession;
-    const accessToken = session?.accessToken as string;
-
-    const graphClient = initializeGraphClient(accessToken);
-
-    const response = graphClient.me.mailFolders.get();
-
-  return (
-    <div>{JSON.stringify(response)}</div>
-  )
-}
-
-export default page
