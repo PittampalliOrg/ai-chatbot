@@ -9,34 +9,34 @@ import { Message } from '@microsoft/microsoft-graph-types'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation';
 
-export async function getEmails(emailIds?: string[]): Promise<Mail[]> {
-    const client = await getGraphClient();
-  
-    const response = await client
-      .api('/me/messages')
-      .select('id,subject,bodyPreview,receivedDateTime,isRead,from')
-      .top(100)
-      .get();
-  
-    console.log(response);
-  
-    let emails: Mail[] = response.value.map((message: any) => ({
-      id: message.id,
-      name: message.from.emailAddress.name,
-      email: message.from.emailAddress.address,
-      subject: message.subject,
-      text: message.bodyPreview,
-      date: message.receivedDateTime,
-      read: message.isRead,
-      labels: [], // Labels would need additional logic or a different API call to retrieve
-    }));
-  
-    if (emailIds && emailIds.length > 0) {
-      emails = emails.filter(email => emailIds.includes(email.id));
-    }
-  
-    return emails;
+export async function getEmails(queryParams?: string): Promise<Mail[]> {
+  const client = await getGraphClient();
+
+  let apiUrl = '/me/messages';
+
+  if (queryParams) {
+    apiUrl += `?${queryParams}`;
   }
+
+  const response = await client
+    .api(apiUrl)
+    .get();
+
+  console.log(response);
+
+  let emails: Mail[] = response.value.map((message: any) => ({
+    id: message.id,
+    name: message.from?.emailAddress?.name,
+    email: message.from?.emailAddress?.address,
+    subject: message.subject,
+    text: message.bodyPreview,
+    date: message.receivedDateTime,
+    read: message.isRead,
+    labels: [], // Labels would need additional logic or a different API call to retrieve
+  }));
+
+  return emails;
+}
   
   
   // function to get email folders
@@ -125,20 +125,20 @@ export async function flagEmail(emailId: string, isFlagged: boolean) {
   }
 }
 
-export async function sendEmail(formData: FormData) {
+export async function sendEmail({ to, subject, body }: { to: string; subject: string; body: string }): Promise<{ success: boolean, error?: any }> {
   const client = await getGraphClient();
 
   const emailData = {
     message: {
-      subject: formData.get('subject'),
+      subject,
       body: {
         contentType: "Text",
-        content: formData.get('body')
+        content: body
       },
       toRecipients: [
         {
           emailAddress: {
-            address: formData.get('to')
+            address: to
           }
         }
       ]
@@ -148,8 +148,7 @@ export async function sendEmail(formData: FormData) {
 
   try {
     await client.api('/me/sendMail').post(emailData);
-    revalidatePath('/mail/[name]');
-    redirect('/mail/inbox');
+    return { success: true };
   } catch (error) {
     console.error('Error sending email:', error);
     return { success: false, error };

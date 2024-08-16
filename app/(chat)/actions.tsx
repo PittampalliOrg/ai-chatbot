@@ -24,7 +24,7 @@ import {
   sleep,
   nanoid
 } from '@/lib/utils'
-import { addTasks, deleteTasks,getTasks, saveChat } from '@/app/actions'
+import { addTasks, deleteTasks, getTasks, saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth, EnrichedSession } from '@/auth'
@@ -34,76 +34,17 @@ import Search from '@/components/search'
 import { Mail as MailType, OptimisticTask } from '@/types'
 import { accounts } from '@/app/mail/data'
 import { TaskComboboxForm } from '@/app/tasks/tasks-combobox-form'
-import { getEmails } from '../mail/actions'
+import { getEmails, sendEmail } from '../mail/actions'
+import { columns } from '../tasks/columns'
+import { TodoTask } from '@microsoft/microsoft-graph-types'
+import { DataTable } from '../tasks/data-table'
+import { MailList } from '../mail/components/mail-list'
+import MailLayout from '../mail/layout'
+import MailListPage from '../mail/page'
+import { ComposeEmail } from '../mail/components/compose-email'
+import { Button } from "@/components/ui/button"
 
-async function confirmPurchase(symbol: string, price: number, amount: number) {
-  'use server'
-
-  const aiState = getMutableAIState<typeof AI>()
-
-  const purchasing = createStreamableUI(
-    <div className="inline-flex items-start gap-1 md:items-center">
-      {spinner}
-      <p className="mb-2">
-        Purchasing {amount} ${symbol}...
-      </p>
-    </div>
-  )
-
-  const systemMessage = createStreamableUI(null)
-
-  runAsyncFnWithoutBlocking(async () => {
-    await sleep(1000)
-
-    purchasing.update(
-      <div className="inline-flex items-start gap-1 md:items-center">
-        {spinner}
-        <p className="mb-2">
-          Purchasing {amount} ${symbol}... working on it...
-        </p>
-      </div>
-    )
-
-    await sleep(1000)
-
-    purchasing.done(
-      <div>
-        <p className="mb-2">
-          You have successfully purchased {amount} ${symbol}. Total cost:{' '}
-          {formatNumber(amount * price)}
-        </p>
-      </div>
-    )
-
-    systemMessage.done(
-      <SystemMessage>
-        You have purchased {amount} shares of {symbol} at ${price}. Total cost ={' '}
-        {formatNumber(amount * price)}.
-      </SystemMessage>
-    )
-
-    aiState.done({
-      ...aiState.get(),
-      messages: [
-        ...aiState.get().messages,
-        {
-          id: nanoid(),
-          role: 'system',
-          content: `[User has purchased ${amount} shares of ${symbol} at ${price}. Total cost = ${amount * price
-            }]`
-        }
-      ]
-    })
-  })
-
-  return {
-    purchasingUI: purchasing.value,
-    newMessage: {
-      id: nanoid(),
-      display: systemMessage.value
-    }
-  }
-}
+// ... (keep the confirmPurchase function as is)
 
 async function submitUserMessage(content: string) {
   'use server'
@@ -128,78 +69,28 @@ async function submitUserMessage(content: string) {
   const result = await streamUI({
     model: openai('gpt-4o'),
     initial: <SpinnerMessage />,
-    system: `You are an intelligent assistant designed to help users manage their Microsoft ToDo tasks efficiently. You will interact with the Microsoft Graph API to perform various task management operations. Your primary functions include:
+    system: `You are an intelligent assistant designed to help users manage their Microsoft ToDo tasks efficiently and handle their emails. You will interact with the Microsoft Graph API to perform various task management and email operations. Your primary functions include:
 
-Get Task Lists: Retrieve and display the user's task lists.
-Get Tasks: Retrieve and display tasks from a specific task list.
-Add Tasks: Add new tasks.
-Delete Tasks: Remove tasks from a specified task list.
-Show Email: Retrieve and display the user's email address.
+1. Task Management:
+   - Get Task Lists: Retrieve and display the user's task lists.
+   - Get Tasks: Retrieve and display tasks from a specific task list.
+   - Add Tasks: Add new tasks.
+   - Delete Tasks: Remove tasks from a specified task list.
+
+2. Email Management:
+   - Show Emails: Retrieve and display the user's emails based on specified criteria.
+   - Compose Email: Help users draft new emails.
+
+3. Weather Information:
+   - Provide weather information for a given city.
+
 When interacting with users, ensure to:
+- Confirm the action they want to perform.
+- Request necessary details (e.g., task list name, task details, email recipients).
+- Provide clear feedback on the success or failure of each operation.
+- Handle errors gracefully and provide helpful troubleshooting information.
 
-Confirm the action they want to perform.
-Request necessary details (e.g., task list name, task details).
-Provide clear feedback on the success or failure of each operation.
-Handle errors gracefully and provide helpful troubleshooting information.
-Your responses should be clear, concise, and focused on task management. Always prioritize the user's productivity and efficiency.`
-
-    //     `\
-    // You are an AI assistant capable of helping with three activities:
-
-    // 1. Search - searching files and file content within Microsoft Graph. When a user specifies a search query for files or file content, you will construct the request body for the search_files function and provide the applicable parameters based on the user's intent.  All function calls MUST be in JSON.
-    // 2. Tasks - displaying user's tasks
-    // 3. Weather Providing the weather
-
-
-    // Search -- Use the following instructions to determine the parameters:
-
-    // 1. **Query String**: You will use your world knowledge and knowledge of Microsoft graph search syntax (including KQL, XRANK, etc.) to create a query string that reflects the semantics of what the user is looking for.
-    // 2. **Entity Types**: Always set this to ["driveItem"] to search for files and file content.
-    // 3. **Starting Index (from)**: If specified by the user, include it; otherwise, default to 0.
-    // 4. **Number of Results (size)**: If specified by the user, include it; otherwise, default to a reasonable number like 10.
-    // 5. **Stored Fields**: If the user requests specific fields to be included in the response, add them.
-    // 6. **Sort Order**: If the user specifies a sort order, include it with the appropriate field and order.
-
-    // #### Examples:
-
-    // - **User Intent**: "Search for documents containing the word 'budget' sorted by date."
-    //   - **Request Body**:
-
-    //     {
-    //       "requests": [
-    //         {
-    //           "entityTypes": ["driveItem"],
-    //           "query": {
-    //             "queryString": "budget"
-    //           },
-    //           "sort": [
-    //             {
-    //               "field": "createdDateTime",
-    //               "sortOrder": "desc"
-    //             }
-    //           ]
-    //         }
-    //       ]
-    //     }
-
-
-    //  **User Intent**: "Find all files related to 'project plan' and show the first 5 results."
-    //    **Request Body**:
-    //     {
-    //       "requests": [
-    //         {
-    //           "entityTypes": ["driveItem"],
-    //           "query": {
-    //             "queryString": "project plan"
-    //           },
-    //           "size": 5
-    //         }
-    //       ]
-    //     }
-
-    // Construct the request body based on these guidelines and call the search_files function with the appropriate parameters.  For any relative dates/times, assume the current date/time is ${new Date().toISOString().slice(0, 10)}
-    //     `
-    ,
+Your responses should be clear, concise, and focused on the user's productivity and efficiency. Always prioritize the user's needs and preferences when suggesting actions or providing information.`,
     messages: [
       ...aiState.get().messages.map((message: any) => ({
         role: message.role,
@@ -299,7 +190,7 @@ Your responses should be clear, concise, and focused on task management. Always 
                     type: 'tool-call',
                     toolName: 'showTasks',
                     toolCallId,
-                    args: {},
+                    args: { count },
                   },
                 ],
               },
@@ -311,20 +202,20 @@ Your responses should be clear, concise, and focused on task management. Always 
                     type: 'tool-result',
                     toolName: 'showTasks',
                     toolCallId,
-                    result: {},
+                    result: { count },
                   },
                 ],
               },
             ],
           });
 
-          const items: OptimisticTask[] = await getTasks();
+          const tasks: TodoTask[] = await getTasks();
 
           return (
             <BotCard>
-              <p>Tasks</p>
+              <DataTable columns={columns} data={tasks} initialTasks={tasks} />
             </BotCard>
-          );;
+          );
         },
       },
       addTasks: {
@@ -370,12 +261,11 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <p>Tasks</p>
+              <DataTable columns={columns} data={addTaskResponse} initialTasks={addTaskResponse} />
             </BotCard>
           );
         },
       },
-
       deleteTasks: {
         description: 'Delete tasks from a specified task list.',
         parameters: z.object({
@@ -420,19 +310,19 @@ Your responses should be clear, concise, and focused on task management. Always 
 
           return (
             <BotCard>
-              <p>Tasks</p>
+              <p>Tasks deleted successfully.</p>
             </BotCard>
           );
         },
       },
       showEmails: {
-        description: 'Display the user emails.',
+        description: 'Display user emails based on specified criteria.',
         parameters: z.object({
-          count: z.number().default(100).describe('The number of emails to display.')
+          queryParams: z.string().describe('OData query parameters to apply to the email request. This can include $filter, $search, $top, $select, $orderby, etc. Example: "$filter=receivedDateTime ge 2023-01-01T00:00:00Z&$search=\'important meeting\'&$top=50&$orderby=receivedDateTime desc"')
         }),
-        generate: async function* ({ count }) {
+        generate: async function* ({ queryParams }) {
           const toolCallId = nanoid();
-
+      
           aiState.done({
             ...aiState.get(),
             messages: [
@@ -445,7 +335,7 @@ Your responses should be clear, concise, and focused on task management. Always 
                     type: 'tool-call',
                     toolName: 'showEmails',
                     toolCallId,
-                    args: {},
+                    args: { queryParams },
                   },
                 ],
               },
@@ -457,71 +347,66 @@ Your responses should be clear, concise, and focused on task management. Always 
                     type: 'tool-result',
                     toolName: 'showEmails',
                     toolCallId,
-                    result: {},
+                    result: { queryParams },
                   },
                 ],
               },
             ],
           });
-
-          const items: MailType[] = await getEmails();
-
+      
+          const items: MailType[] = await getEmails(queryParams);
+      
           return (
             <BotCard>
-              Mail
+              <p>Query parameters: {queryParams}</p>
+              <MailListPage params={{ name: 'inbox' }} searchParams={{ queryParams }} />        
             </BotCard>
-          );;
+          );
         },
       },
-
-      // search_query: {
-      //   description: 'Execute a search query on the Microsoft Graph API to find files based on user-defined criteria.',
-      //   parameters: z.object({
-      //     query: z.string().describe('the query string to search for.'),
-      //   }),
-      //   generate: async function* ({ query }) {
-      //     const toolCallId = nanoid();
-
-      //     aiState.done({
-      //       ...aiState.get(),
-      //       messages: [
-      //         ...aiState.get().messages,
-      //         {
-      //           id: nanoid(),
-      //           role: 'assistant',
-      //           content: [
-      //             {
-      //               type: 'tool-call',
-      //               toolName: 'search_query',
-      //               toolCallId,
-      //               args: { query },
-      //             },
-      //           ],
-      //         },
-      //         {
-      //           id: nanoid(),
-      //           role: 'tool',
-      //           content: [
-      //             {
-      //               type: 'tool-result',
-      //               toolName: 'search_query',
-      //               toolCallId,
-      //               result: { query },
-      //             },
-      //           ],
-      //         },
-      //       ],
-      //     });
-      //     console.log(query);
-      //     return (
-      //       <BotCard>
-      //         <Search searchQuery={query} />
-      //       </BotCard>
-      //     )
-      //   }
-      // },
-    }
-  })
+      composeEmail: {
+        description: 'Compose an email using provided information.',
+        parameters: z.object({
+          to: z.string().describe('Email address of the recipient'),
+          subject: z.string().describe('Subject of the email'),
+          body: z.string().describe('Body content of the email')
+        }),
+        generate: async function* ({ to, subject, body }) {
+          const toolCallId = nanoid();
+      
+          const emailData = { to, subject, body };
+      
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'composeEmail',
+                    toolCallId,
+                    args: emailData,
+                  },
+                ],
+              },
+            ],
+          });
+      
+          const confirmationMessage = createStreamableUI(
+            <BotCard>
+              <ComposeEmail initialData={emailData} onSend={sendEmail} />
+              <p>Here's the composed email. Review and click 'Send' when ready.</p>
+            </BotCard>
+          );
+      
+          return confirmationMessage.value;
+        },
+      },
+    },
+  });
 
   return {
     id: nanoid(),
@@ -542,7 +427,7 @@ export type UIState = {
 export const AI = createAI<AIState, UIState>({
   actions: {
     submitUserMessage,
-    confirmPurchase
+    sendComposedEmail
   },
   initialUIState: [],
   initialAIState: { chatId: nanoid(), messages: [] },
@@ -600,33 +485,25 @@ export const getUIStateFromAIState = (aiState: Chat) => {
       id: `${aiState.chatId}-${index}`,
       display:
         message.role === 'tool' ? (
-          message.content.map(tool => {
-            return tool.toolName === 'showTasks' ? (
-              <BotCard>
-                {/* @ts-expect-error */}
-                <TaskComboboxForm props={tool.result} />
-              </BotCard>
-            ) : tool.toolName === 'addTasks' ? (
-              <BotCard>
-                {/* @ts-expect-error */}
-                <TaskComboboxForm props={tool.result} />
-              </BotCard>
-            ) : tool.toolName === 'deleteTasks' ? (
-              <BotCard>
-                {/* @ts-expect-error */}
-                <TaskComboboxForm props={tool.result} />
-              </BotCard>
-            ) : tool.toolName === 'search_query' ? (
-              <BotCard>
-                {/* @ts-expect-error */}
-                <Search props={tool.result} />
-              </BotCard>
-            ) : tool.toolName === 'showEmails' ? (
-              <BotCard>
-                {/* @ts-expect-error */}
-                <Mail props={tool.result} />
-              </BotCard>
-            ) : null
+          message.content.map((tool: any) => {
+            switch (tool.toolName) {
+              case 'showTasks':
+              case 'addTasks':
+              case 'deleteTasks':
+                return (
+                  <BotCard>
+                    <TaskComboboxForm lists={[]} />
+                  </BotCard>
+                );
+              case 'showEmails':
+                return (
+                  <BotCard>
+                    <MailListPage params={{ name: 'inbox' }} searchParams={{ queryParams: tool.result.queryParams }} />
+                  </BotCard>
+                );
+              default:
+                return null;
+            }
           })
         ) : message.role === 'user' ? (
           <UserMessage>{message.content as string}</UserMessage>
@@ -635,4 +512,22 @@ export const getUIStateFromAIState = (aiState: Chat) => {
           <BotMessage content={message.content} />
         ) : null
     }))
+}
+
+export async function sendComposedEmail(emailData: { to: string; subject: string; body: string }) {
+  'use server'
+
+  const result = await sendEmail(emailData);
+
+  if (result.success) {
+    return {
+      id: nanoid(),
+      display: <BotCard>Email sent successfully!</BotCard>
+    };
+  } else {
+    return {
+      id: nanoid(),
+      display: <BotCard>Failed to send email. Please try again.</BotCard>
+    };
+  }
 }

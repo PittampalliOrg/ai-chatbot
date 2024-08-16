@@ -49,15 +49,15 @@ type EmailWithSender = {
   last_name: string;
   email: string;
 };
-export async function getEmailsForFolder(folderName: string = "Inbox") {
-  // Authentication setup should be done outside this function and passed in if needed
+export async function getEmailsForFolder(folderName: string = "Inbox", queryParams?: string) {
   const client = await getGraphClient();
 
-  // remove spaces in folder name
   let originalFolderName = removeSpacesFromFolderName(folderName);
-
   let endpoint = `/me/mailFolders/${originalFolderName}/messages`;
 
+  if (queryParams) {
+    endpoint += `?${queryParams}`;
+  }
 
   try {
     const response = await client.api(endpoint).get();
@@ -68,8 +68,7 @@ export async function getEmailsForFolder(folderName: string = "Inbox") {
   } catch (error) {
     console.error("Error fetching emails:", error);
     throw error;
-  };
-
+  }
 }
 
 

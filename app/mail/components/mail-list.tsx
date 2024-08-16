@@ -5,7 +5,7 @@ import { MailItem } from "@/app/mail/components/mail-item"
 interface MailListProps {
   emails: Message[]
   params: { name: string }
-  searchParams: { q?: string; id?: string }
+  searchParams: { filter?: string; id?: string }
 }
 
 export function MailList({ emails, params, searchParams }: MailListProps) {

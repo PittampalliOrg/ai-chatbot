@@ -1,46 +1,67 @@
-// components/compose-email.tsx
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { sendEmail } from '../actions';
 import { useRouter } from 'next/navigation';
 
-export function ComposeEmail() {
-  const formRef = useRef<HTMLFormElement>(null);
+type EmailData = {
+  to: string;
+  subject: string;
+  body: string;
+};
+
+export function ComposeEmail({ initialData, onSend }: { initialData?: EmailData; onSend: (data: EmailData) => Promise<{ success: boolean, error?: any }> }) {
+  const [emailData, setEmailData] = useState<EmailData>(initialData || { to: '', subject: '', body: '' });
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState<{ success: boolean, message: string } | null>(null);
   const router = useRouter();
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const { name, value } = e.target;
+    setEmailData(prev => ({ ...prev, [name]: value }));
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const result = await sendEmail(formData);
-    if (result.success) {
-      router.push('/mail/inbox');
-    } else {
-      // Handle error (e.g., show an error message)
-    }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.key === 'NumpadEnter')) {
-      e.preventDefault();
-      formRef.current?.requestSubmit();
+    setIsSending(true);
+    setSendResult(null);
+    try {
+      const result = await onSend(emailData);
+      if (result.success) {
+        setSendResult({ success: true, message: 'Email sent successfully!' });
+        router.push('/mail/inbox');
+      } else {
+        setSendResult({ success: false, message: 'Failed to send email. Please try again.' });
+      }
+    } catch (error) {
+      setSendResult({ success: false, message: 'An error occurred while sending the email.' });
+    } finally {
+      setIsSending(false);
     }
   }
 
   return (
-    <form action={sendEmail} className="space-y-4 p-4">
-      <Input name="to" type="email" placeholder="To" required />
-      <Input name="subject" type="text" placeholder="Subject" required />
+    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+      <Input name="to" type="email" placeholder="To" required value={emailData.to} onChange={handleChange} />
+      <Input name="subject" type="text" placeholder="Subject" required value={emailData.subject} onChange={handleChange} />
       <Textarea 
         name="body" 
         placeholder="Message" 
         required 
         className="min-h-[200px]"
+        value={emailData.body}
+        onChange={handleChange}
       />
-      <Button type="submit">Send</Button>
+      <Button type="submit" disabled={isSending}>
+        {isSending ? 'Sending...' : 'Send Email'}
+      </Button>
+      {sendResult && (
+        <p className={sendResult.success ? 'text-green-500' : 'text-red-500'}>
+          {sendResult.message}
+        </p>
+      )}
     </form>
   );
 }
