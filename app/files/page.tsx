@@ -1,6 +1,5 @@
-import UserProfile from "@/components/user-profile";
+import FilesList from "@/components/graph-files";
 import { auth, EnrichedSession } from '@/auth'
-import { Todo } from "@microsoft/mgt-react";
 
 export default async function ProfilePage() {
     const session = (await auth()) as EnrichedSession
@@ -8,8 +7,7 @@ export default async function ProfilePage() {
 
   return (
   <>
-    <UserProfile accessToken={accessToken} />
-    
+    <FilesList accessToken={accessToken} />
   </>
   );
 }
