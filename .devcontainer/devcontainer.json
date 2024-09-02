@@ -1,10 +1,10 @@
 {
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "portsAttributes": {
-    "3000": {
+    "3009": {
       "label": "Application",
       "onAutoForward": "openPreview"
     }
   },
-  "forwardPorts": [3000]
+  "forwardPorts": [3009]
 }
