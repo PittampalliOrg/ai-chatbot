@@ -1,3 +1,4 @@
+<!-- This is an open-source AI chatbot app template built with Next.js (App Router), the Vercel AI SDK for streaming chat UI, support for multiple AI providers (OpenAI, Anthropic, Cohere, Hugging Face, LangChain), shadcn/ui components, Vercel KV for chat history/rate limiting/session storage, and NextAuth.js for authentication. -->
 <a href="https://chat.vercel.ai/">
   <img alt="Next.js 14 and App Router-ready AI chatbot." src="https://chat.vercel.ai/opengraph-image.png">
   <h1 align="center">Next.js AI Chatbot</h1>
