@@ -1,0 +1,183 @@
+version: v2beta1
+name: ai-chatbot
+
+imports:
+  - path: ../../stacks/main/devspace-templates/base.yaml
+  - path: ../../stacks/main/devspace-templates/snippets/nextjs.yaml
+
+vars:
+  APP_NAME: ai-chatbot
+  APP_NAMESPACE:
+    default: "workflow-builder"
+  LOCAL_PORT:
+    default: "3009"
+  CONTAINER_PORT:
+    default: "3000"
+  SSH_PORT:
+    default: "2222"
+
+  APP_PUBLIC_URL:
+    default: "https://ai-chatbot-ryzen.tail286401.ts.net"
+
+  CPU_REQUEST:
+    default: "500m"
+  CPU_LIMIT:
+    default: "4"
+  MEMORY_REQUEST:
+    default: "2Gi"
+  MEMORY_LIMIT:
+    default: "8Gi"
+
+  OTEL_SERVICE_NAME:
+    default: "${APP_NAME}-dev"
+  OTEL_ENVIRONMENT:
+    default: "development"
+
+  CURRENT_PRODUCTION_IMAGE:
+    command: |
+      kubectl get deployment ${APP_NAME} -n ${APP_NAMESPACE} -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null ||
+      echo "${GITEA_HOST}/${GITEA_USER}/${APP_NAME}:latest"
+    default: "${GITEA_HOST}/${GITEA_USER}/${APP_NAME}:latest"
+
+  DEV_IMAGE_REPOSITORY:
+    default: "${GITEA_HOST}/${GITEA_USER}/nodejs-22-devspace"
+
+dev:
+  app:
+    namespace: ${APP_NAMESPACE}
+    labelSelector:
+      app: ai-chatbot
+      app.kubernetes.io/name: ai-chatbot
+    container: ${APP_NAME}
+    devImage: ${DEV_IMAGE_REPOSITORY}:latest
+    workingDir: /app
+
+    resources:
+      requests:
+        cpu: ${CPU_REQUEST}
+        memory: ${MEMORY_REQUEST}
+      limits:
+        cpu: ${CPU_LIMIT}
+        memory: ${MEMORY_LIMIT}
+
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        echo "=== DevSpace Development Container (ai-chatbot) ==="
+        echo "Replacing production image: ${CURRENT_PRODUCTION_IMAGE}"
+        echo "Using shared devcontainer: nodejs-22-devspace"
+        echo ""
+
+        echo "Checking dependencies..."
+        if [ ! -d "node_modules" ] || [ ! -f "node_modules/.package-lock-hash" ] || \
+           [ "$(cat node_modules/.package-lock-hash 2>/dev/null)" != "$(md5sum package-lock.json | cut -d' ' -f1)" ]; then
+          echo "Installing dependencies..."
+          npm ci
+          md5sum package-lock.json | cut -d' ' -f1 > node_modules/.package-lock-hash
+        else
+          echo "Dependencies up to date (cached)"
+        fi
+
+        export PATH="/app/node_modules/.bin:$PATH"
+
+        echo "Starting Next.js development server..."
+        exec next dev --hostname 0.0.0.0 --port ${CONTAINER_PORT}
+
+    sync:
+      - path: ./:/app
+        initialSync: mirrorLocal
+        disableDownload: true
+        polling: true
+        startContainer: true
+        waitInitialSync: true
+        onUpload:
+          restartContainer: false
+          exec:
+            - name: install-dependencies
+              command: sh
+              args:
+                - -lc
+                - cd /app && npm ci
+              failOnError: true
+              onChange:
+                - package.json
+                - package-lock.json
+        excludePaths:
+          - node_modules/
+          - .next/
+          - out/
+          - dist/
+          - coverage/
+          - next-env.d.ts
+          - .devenv/
+          - .devspace/
+          - .direnv/
+          - .git
+          - .git/
+          - .github/
+          - .idea/
+          - .vscode/
+          - .cursor/
+          - docs/
+          - "*.md"
+          - "*.log"
+          - LICENSE
+          - Dockerfile
+          - Dockerfile.devspace
+          - devenv.*
+          - devenv.lock
+          - .devenv*
+          - .devenv.flake.nix
+          - .dockerignore
+          - .gitignore
+          - .env.local
+          - .env.example
+          - .vercel/
+
+    persistPaths:
+      - path: /tmp
+        skipPopulate: true
+      - path: /app/node_modules
+
+    patches:
+      - op: remove
+        path: spec.containers.name=${APP_NAME}.livenessProbe
+      - op: remove
+        path: spec.containers.name=${APP_NAME}.readinessProbe
+      - op: remove
+        path: spec.containers.name=${APP_NAME}.startupProbe
+      - op: replace
+        path: spec.containers.name=${APP_NAME}.securityContext
+        value:
+          runAsUser: 0
+          runAsGroup: 0
+          runAsNonRoot: false
+          allowPrivilegeEscalation: false
+      - op: replace
+        path: spec.securityContext
+        value:
+          fsGroup: 1001
+          runAsNonRoot: false
+
+    ports:
+      - port: "${LOCAL_PORT}:${CONTAINER_PORT}"
+
+    ssh:
+      enabled: true
+      localPort: 2222
+
+    env:
+      - name: NODE_ENV
+        value: development
+      - name: PORT
+        value: "${CONTAINER_PORT}"
+      - name: HOSTNAME
+        value: "0.0.0.0"
+      - name: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - name: OTEL_SERVICE_NAME
+        value: ${OTEL_SERVICE_NAME}
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: "deployment.environment=${OTEL_ENVIRONMENT},service.namespace=${APP_NAMESPACE},service.version=dev"
