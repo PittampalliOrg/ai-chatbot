@@ -398,7 +398,7 @@ Your responses should be clear, concise, and focused on the user's productivity 
           const confirmationMessage = createStreamableUI(
             <BotCard>
               <ComposeEmail initialData={emailData} onSend={sendEmail} />
-              <p>Here's the composed email. Review and click 'Send' when ready.</p>
+              <p>Here&apos;s the composed email. Review and click &apos;Send&apos; when ready.</p>
             </BotCard>
           );
       
